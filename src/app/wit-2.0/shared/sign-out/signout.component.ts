@@ -5,12 +5,12 @@ import { Router } from '@angular/router';
 import { Hub } from 'aws-amplify/utils';
 
 @Component({
-  selector: 'wc-shared-log-out',
+  selector: 'wc-shared-sign-out',
   standalone: true,
-  templateUrl: './logout.component.html',
-  styleUrl: './log-out.component.css'
+  templateUrl: './sign-out.component.html',
+  styleUrl: './sign-out.component.css'
 })
-export class LogoutComponent implements OnInit, OnDestroy {
+export class SignoutComponent implements OnInit, OnDestroy {
   authenticator = inject(AuthenticatorService);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);

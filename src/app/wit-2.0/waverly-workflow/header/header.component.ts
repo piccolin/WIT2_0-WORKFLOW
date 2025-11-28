@@ -1,11 +1,11 @@
 import { Component } from '@angular/core';
-import {LogoutComponent} from "@wit/shared/log-out/logout.component";
+import {SignoutComponent} from "@wit/shared/sign-out/signout.component";
 
 @Component({
   selector: 'app-header',
   standalone: true,
     imports: [
-        LogoutComponent
+        SignoutComponent
     ],
   templateUrl: './header.component.html',
   styleUrl: './header.component.css'
