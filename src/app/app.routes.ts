@@ -29,13 +29,13 @@ export const routes: Routes = [
   },
   {
     path: 'product/import/woocommerce',
-    loadComponent: () => import('@wit/e-commerce/product/import-product/woo-commerce/import-product-from-wooCommerce-csv.component')
+    loadComponent: () => import('@wit/shared/import-product/woo-commerce/import-product-from-wooCommerce-csv.component')
       .then(component => component.ImportProductFromWooCommerceCsvComponent),
     title: 'Dashboard',
   },
   {
     path: 'product/list',
-    loadComponent: () => import('@wit/e-commerce/product/product-list/list-product/list-product.component')
+    loadComponent: () => import('@wit/e-commerce/product/list-product/list-product.component')
       .then(component => component.ListProductComponent),
     title: 'List Products',
   },
@@ -43,7 +43,7 @@ export const routes: Routes = [
   //-- Double Check Paths ---//
   {
     path: 'workflow/double-check',
-    loadComponent: () => import('@wit/e-commerce/product/product-list/list-product/list-product.component')
+    loadComponent: () => import('@wit/e-commerce/product/list-product/list-product.component')
       .then(component => component.ListProductComponent),
     title: 'List Products',
   },
