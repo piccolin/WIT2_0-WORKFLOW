@@ -3,7 +3,7 @@ app.route.ts
   {
     path: 'import',
     loadComponent: () => import('./product/csv-import/csv-import.component')
-      .then(m => m.CsvImportComponent),
+      .then(m => m.ImportProductFromWooCommerceCsvComponent),
     title: 'Dashboard',
     canActivate: [AuthGuard]
   }

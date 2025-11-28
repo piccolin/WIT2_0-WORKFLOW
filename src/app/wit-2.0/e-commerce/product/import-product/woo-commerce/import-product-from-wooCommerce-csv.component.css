@@ -1,4 +1,4 @@
-/* csv-import.component.scss */
+/* import-product.component.scss */
 /* High-level: Clean, responsive layout with drag/drop zones and table previews.
    Uses CSS Grid for sections, minimal nesting for readability. No heavy features like mixins. */
 .import-container {
@@ -119,4 +119,4 @@
   }
 }
 
-/*# sourceMappingURL=csv-import.component.css.map */
+/*# sourceMappingURL=import-product-from-wooCommerce-csv.component.css.map */

@@ -5,12 +5,12 @@ import { Router } from '@angular/router';
 import { Hub } from 'aws-amplify/utils';
 
 @Component({
-  selector: 'app-auth-header',
+  selector: 'wc-shared-log-out',
   standalone: true,
-  templateUrl: './auth-header.component.html',
-  styleUrl: './auth-header.component.css'
+  templateUrl: './logout.component.html',
+  styleUrl: './log-out.component.css'
 })
-export class AuthHeaderComponent implements OnInit, OnDestroy {
+export class LogoutComponent implements OnInit, OnDestroy {
   authenticator = inject(AuthenticatorService);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
@@ -26,7 +26,7 @@ export class AuthHeaderComponent implements OnInit, OnDestroy {
     this.stopHubListener = Hub.listen('auth', ({ payload }) => {
       if (payload.event === 'signedOut') {
         this.cdr.markForCheck();
-        this.router.navigate(['/signup'], { replaceUrl: true });
+        this.router.navigate(['/signin'], { replaceUrl: true });
       }
     });
   }
@@ -37,7 +37,7 @@ export class AuthHeaderComponent implements OnInit, OnDestroy {
       // Hub listener above will handle instant UI update + redirect
     } catch (error) {
       console.error('Logout error:', error);
-      this.router.navigate(['/signup'], { replaceUrl: true });
+      await this.router.navigate(['/signin'], {replaceUrl: true});
     }
   }
 

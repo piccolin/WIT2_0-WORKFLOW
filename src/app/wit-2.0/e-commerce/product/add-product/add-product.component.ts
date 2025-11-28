@@ -1,6 +1,6 @@
 /**
  * ========================================================================
- * CabinetProductComponent – Demo for Cabinet Product CRUD
+ * AddProductComponent – Demo for Cabinet Product CRUD
  * ========================================================================
  *
  * Component demonstrating write (create) and read (list/get) operations
@@ -27,13 +27,13 @@ import {CabinetProduct, CreateCabinetProductMutation, GetCabinetProductQuery, Li
 // Component Decorator
 // -----------------------------------------------------------------
 @Component({
-  selector: 'app-cabinet-product',
+  selector: 'app-add-product',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
-  templateUrl: './cabinet-product.component.html',
-  styleUrls: ['./cabinet-product.component.scss'],
+  templateUrl: './add-product.component.html',
+  styleUrls: ['./add-product.component.scss'],
 })
-export class CabinetProductComponent implements OnInit {
+export class AddProductComponent implements OnInit {
   // -----------------------------------------------------------------
   // Inputs (setters listen for change like ngChanges)
   // -----------------------------------------------------------------

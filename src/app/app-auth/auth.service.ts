@@ -68,7 +68,7 @@
 //     }
 //   }
 //
-//   async logout(): Promise<void> {
+//   async log-out(): Promise<void> {
 //     try {
 //       await Auth.signOut();
 //     } catch {}

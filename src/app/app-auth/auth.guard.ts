@@ -56,7 +56,7 @@
 //         return true;
 //       })
 //       .catch((error) => { //not authenticated
-//         console.log('\t%c 🔒 AuthGuard failed... <%s> NOT allowed...redirected to <app-auth/signin> or <app-auth/signup> => Error: <%s>', LoggingService.LOGGING_GUARDS_FAILED, state.url, error);
+//         console.log('\t%c 🔒 AuthGuard failed... <%s> NOT allowed...redirected to <app-auth/signin> or <app-auth/signin> => Error: <%s>', LoggingService.LOGGING_GUARDS_FAILED, state.url, error);
 //         this.openDialog('User Account Required',
 //           ``,
 //           '',
@@ -77,7 +77,7 @@
 //           else {
 //             this.confirmDialogService.close(true);
 //             this.appStateStoreService.setToRequest("", relativePath, uri, paramArray)
-//             await this._router.navigate(['dashboard/auth/signup']);
+//             await this._router.navigate(['dashboard/auth/signin']);
 //             return false;
 //           }
 //         })

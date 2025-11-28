@@ -7,13 +7,13 @@ import { Subscription, interval } from 'rxjs';
 import { takeWhile } from 'rxjs/operators';
 
 @Component({
-  selector: 'app-signup',
+  selector: 'app-signin',
   standalone: true,
   imports: [AmplifyAuthenticatorModule, RouterOutlet],
-  templateUrl: './signup.component.html',
-  styleUrls: ['./signup.component.css'],
+  templateUrl: './signin.component.html',
+  styleUrls: ['./signin.component.css'],
 })
-export class SignupComponent implements OnInit, OnDestroy {
+export class SigninComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private authenticator = inject(AuthenticatorService);

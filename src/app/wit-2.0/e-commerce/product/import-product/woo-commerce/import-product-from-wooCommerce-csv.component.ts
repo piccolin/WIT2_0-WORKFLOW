@@ -1,6 +1,6 @@
 /**
  * ========================================================================
- * CsvImportComponent – Fully Dynamic CSV Import (No Hard-Coding)
+ * ImportProductFromWooCommerceCsvComponent – Fully Dynamic CSV Import (No Hard-Coding)
  * ========================================================================
  *
  * • Brand / Door Style extracted from Name
@@ -22,13 +22,13 @@ import { CabinetProductGraphqlService } from '@app/app-data/stores/cabinet-produ
 import { CabinetProduct } from '@app/API.service';
 
 @Component({
-  selector: 'app-csv-import',
+  selector: 'app-import-product',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
-  templateUrl: './csv-import.component.html',
-  styleUrls: ['./csv-import.component.scss'],
+  templateUrl: './import-product-from-wooCommerce-csv.component.html',
+  styleUrls: ['./import-product-from-wooCommerce-csv.component.scss'],
 })
-export class CsvImportComponent implements OnInit {
+export class ImportProductFromWooCommerceCsvComponent implements OnInit {
   // -----------------------------------------------------------------
   // Runtime State
   // -----------------------------------------------------------------

@@ -1,36 +1,54 @@
 import { Routes } from '@angular/router';
-import {SignupComponent} from "@app/app-auth/signup/signup.component";
 import {authGuard} from "@app/app-auth/auth.guard";
 
 export const routes: Routes = [
+  //-- Authentication  ---//
+  {
+    path: 'signin',
+    loadComponent: () => import('@wit/e-commerce/signin/signin.component')
+      .then(component => component.SigninComponent),
+    title: 'Sign In',
+    //canActivate: [unAuthGuard]
+  },
+
+  {
+    path: 'home',
+    loadComponent: () => import('@wit/test/secure-landing-page/secure-landing-page.component')
+      .then(component => component.SecureLandingPageComponent),
+    title: 'Secure Homepage',
+    canActivate: [authGuard]
+  },
+
+
   //-- Product Paths ---//
   {
-    path: 'login',
-    component: SignupComponent,
+    path: 'product/add',
+    loadComponent: () => import('@wit/e-commerce/product/add-product/add-product.component')
+      .then(component => component.AddProductComponent),
+    title: 'Add Products',
   },
   {
-    path: 'product',
-    loadComponent: () => import('@wit/product/cabinet-product/cabinet-product.component')
-      .then(m => m.CabinetProductComponent),
+    path: 'product/import/woocommerce',
+    loadComponent: () => import('@wit/e-commerce/product/import-product/woo-commerce/import-product-from-wooCommerce-csv.component')
+      .then(component => component.ImportProductFromWooCommerceCsvComponent),
     title: 'Dashboard',
-    canActivate: [authGuard],
   },
   {
-    path: 'import',
-    loadComponent: () => import('@wit/product/csv-import/csv-import.component')
-      .then(m => m.CsvImportComponent),
-    title: 'Dashboard',
-    canActivate: [authGuard]
+    path: 'product/list',
+    loadComponent: () => import('@wit/e-commerce/product/product-list/list-product/list-product.component')
+      .then(component => component.ListProductComponent),
+    title: 'List Products',
   },
-  {
-    path: 'list',
-    loadComponent: () => import('@wit/product/product-list/cabinet-product-list/cabinet-product-list.component')
-      .then(m => m.CabinetProductListComponent),
-    title: 'Dashboard',
-    canActivate: [authGuard]
-  },
-  //-- Double Check Paths ---//
 
-  { path: '', redirectTo: '/product', pathMatch: 'full' },
-  { path: '**', redirectTo: '/product' },
+  //-- Double Check Paths ---//
+  {
+    path: 'workflow/double-check',
+    loadComponent: () => import('@wit/e-commerce/product/product-list/list-product/list-product.component')
+      .then(component => component.ListProductComponent),
+    title: 'List Products',
+  },
+
+  //-- Default Paths ---//
+  { path: '', redirectTo: '/workflow/double-check', pathMatch: 'full' },
+  { path: '**', redirectTo: '/workflow/double-check' },
 ];

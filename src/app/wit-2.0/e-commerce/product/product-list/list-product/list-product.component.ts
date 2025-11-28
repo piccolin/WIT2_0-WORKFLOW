@@ -1,6 +1,6 @@
 /**
  * ========================================================================
- * CabinetProductListComponent – Fetches & Displays Cabinet Product Cards
+ * ListProductComponent – Fetches & Displays Cabinet Product Cards
  * ========================================================================
  *
  * Standalone container component that queries CabinetProduct data via CabinetProductGraphqlService,
@@ -21,7 +21,7 @@ import { CabinetProductGraphqlService } from '@app/app-data/stores/cabinet-produ
 import { CabinetProduct, ListCabinetProductsQuery } from '@app/API.service';
 
 // Import child card component
-import {ShoppingCartCardComponent} from "@app/wit-2.0/product/product-list/cabinet-product-list/view/shopping-cart-card/shopping-cart-card.component";
+import {ShoppingCartCardComponent} from "@wit/e-commerce/product/product-list/list-product/view/shopping-cart-card/shopping-cart-card.component";
 
 import { Component, OnInit, inject, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -31,13 +31,13 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 // Component Decorator
 // -----------------------------------------------------------------
 @Component({
-  selector: 'app-cabinet-product-list',
+  selector: 'app-add-product-list',
   standalone: true,
   imports: [CommonModule, ShoppingCartCardComponent],
-  templateUrl: './cabinet-product-list.component.html',
-  styleUrls: ['./cabinet-product-list.component.scss'],
+  templateUrl: './list-product.component.html',
+  styleUrls: ['./list-product.component.scss'],
 })
-export class CabinetProductListComponent implements OnInit {
+export class ListProductComponent implements OnInit {
   // -----------------------------------------------------------------
   // Inputs (setters listen for change like ngChanges)
   // -----------------------------------------------------------------
