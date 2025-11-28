@@ -52,3 +52,44 @@
 //   }//end function
 // }//end class
 //
+
+// import { Injectable } from '@angular/core';
+// import * as Auth from '@aws-amplify/auth';
+//
+// @Injectable({ providedIn: 'root' })
+// export class AuthService {
+//
+//   async isAuthenticated(): Promise<boolean> {
+//     try {
+//       await Auth.getCurrentUser(); // will throw if not logged in
+//       return true;
+//     } catch {
+//       return false;
+//     }
+//   }
+//
+//   async logout(): Promise<void> {
+//     try {
+//       await Auth.signOut();
+//     } catch {}
+//   }
+// }
+
+import { Injectable } from '@angular/core';
+import { getCurrentUser, signOut } from 'aws-amplify/auth';
+
+@Injectable({ providedIn: 'root' })
+export class AuthService {
+  async isAuthenticated(): Promise<boolean> {
+    try {
+      await getCurrentUser();
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  async logout(): Promise<void> {
+    await signOut();
+  }
+}

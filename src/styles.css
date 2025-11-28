@@ -1,1 +1,159 @@
-/* You can add global styles to this file, and also import other style files */
+/* ============================================= */
+/*  1. Google Fonts                              */
+/* ============================================= */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+/* ============================================= */
+/*  2. Global Resets & Layout                    */
+/* ============================================= */
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: 'Poppins', sans-serif;
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 50%, #f0fdfa 100%);
+  overflow-x: hidden;
+}
+
+#root, app-root, .amplify-auth-container { height: 100%; }
+
+/* ============================================= */
+/*  3. Full Page Centering + Kill All Gaps       */
+/* ============================================= */
+.auth-page-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 1rem;
+}
+
+.auth-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 440px;
+  gap: 0 !important;           /* ← kills any space between logo & form */
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* ============================================= */
+/*  4. Logo – Perfect Size & Tight Spacing       */
+/* ============================================= */
+.auth-logo-container {
+  margin: 0 0 1.4rem 0 !important;   /* ← exact gap you control */
+  padding: 0;
+  text-align: center;
+}
+
+.auth-logo {
+  height: 128px;                     /* perfect bold login-page size */
+  width: auto;
+  filter: drop-shadow(0 8px 20px rgba(16, 185, 129, 0.22));
+}
+
+/* ============================================= */
+/*  5. Amplify Authenticator – Zero External Space */
+/* ============================================= */
+amplify-authenticator {
+  width: 100%;
+  margin: 0 !important;
+  padding: 0 !important;
+  display: block;
+}
+
+/* The actual white card – only internal padding */
+amplify-authenticator::part(container) {
+  margin: 0 auto !important;
+  padding: 2.8rem 2.5rem 3.2rem !important;
+  border-radius: 24px !important;
+  background: #ffffff !important;
+  box-shadow:
+    0 20px 40px rgba(0,0,0,0.06),
+    0 1px 3px rgba(0,0,0,0.08),
+    0 0 0 1px rgba(16,185,129,0.08) !important;
+  border: 1px solid rgba(16,185,129,0.12) !important;
+  backdrop-filter: blur(10px);
+}
+
+/* Remove any inner card styling */
+amplify-authenticator::part(card) {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* ============================================= */
+/*  6. Green Theme Variables                     */
+/* ============================================= */
+amplify-authenticator {
+  --amplify-font-family: 'Poppins', sans-serif;
+  --amplify-primary-color: #10b981;
+  --amplify-primary-tint: #34d399;
+  --amplify-primary-shade: #059669;
+  --amplify-background-color: #ffffff;
+  --amplify-text-color: #1f2937;
+  --amplify-border-radius: 20px;
+}
+
+/* ============================================= */
+/*  7. Inputs, Buttons, Text (unchanged – perfect) */
+/* ============================================= */
+amplify-authenticator::part(input), amplify-authenticator input {
+  border-radius: 14px !important;
+  padding: 1rem 1.1rem !important;
+  font-size: 1rem !important;
+  border: 2px solid #e5e7eb !important;
+  background: #ffffff !important;
+  transition: all 0.25s ease !important;
+}
+amplify-authenticator::part(input):focus, amplify-authenticator input:focus {
+  border-color: #10b981 !important;
+  box-shadow: 0 0 0 4px rgba(16,185,129,0.15) !important;
+  outline: none !important;
+}
+
+amplify-authenticator::part(button), amplify-authenticator button {
+  border-radius: 14px !important;
+  padding: 0.9rem 1.8rem !important;
+  font-weight: 600 !important;
+  text-transform: none !important;
+  background: #10b981 !important;
+  color: white !important;
+  border: none !important;
+  box-shadow: 0 4px 14px rgba(16,185,129,0.3) !important;
+  transition: all 0.25s ease !important;
+}
+amplify-authenticator::part(button):hover, amplify-authenticator button:hover {
+  background: #059669 !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 10px 25px rgba(16,185,129,0.35) !important;
+}
+
+amplify-authenticator::part(header) {
+  font-size: 1.85rem !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  margin-bottom: 2rem !important;
+  text-align: center;
+}
+amplify-authenticator::part(label) { font-weight: 500 !important; color: #374151 !important; margin-bottom: 0.5rem !important; }
+amplify-authenticator a { color: #10b981 !important; font-weight: 600 !important; text-decoration: none !important; }
+amplify-authenticator a:hover { color: #059669 !important; text-decoration: underline !important; }
+
+/* ============================================= */
+/*  8. Mobile                                   */
+/* ============================================= */
+@media (max-width: 480px) {
+  .auth-logo { height: 110px; }
+  amplify-authenticator::part(container) {
+    padding: 2.2rem 1.8rem !important;
+    border-radius: 20px !important;
+  }
+}

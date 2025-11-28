@@ -1,0 +1,26 @@
+<div class="auth-page-container">
+  <div class="auth-card">
+    <!-- Logo at the top -->
+    <div class="auth-logo-container">
+      <img src="/logo.jpg" alt="App Logo" class="auth-logo" />
+    </div>
+
+<amplify-authenticator>
+  <!-- Initial load -->
+  <ng-template amplifySlot="configuring">
+    <div class="text-center p-8">
+      <p>Loading authentication...</p>
+    </div>
+  </ng-template>
+
+  <!-- After sign-in success (briefly before redirect) -->
+  <ng-template amplifySlot="authenticated">
+    <div class="flex flex-col items-center justify-center min-h-96 text-center">
+      <h2 class="text-2xl font-bold mb-4">Welcome!</h2>
+      <p>Redirecting to your dashboard...</p>
+    </div>
+  </ng-template>
+</amplify-authenticator>
+  </div>
+</div>
+

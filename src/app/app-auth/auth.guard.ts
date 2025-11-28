@@ -143,3 +143,38 @@
 //     this.confirmDialogService.open(options);
 //   }
 // }//end class
+
+
+// import { inject } from '@angular/core';
+// import { CanActivateFn, Router } from '@angular/router';
+// import { AuthService } from './auth.service';
+//
+// export const authGuard: CanActivateFn = async (_route, state) => {
+//   const authService = inject(AuthService);
+//   const router = inject(Router);
+//
+//   const loggedIn = await authService.isAuthenticated();
+//
+//   if (loggedIn) return true;
+//
+//   return router.createUrlTree(['/login'], {
+//     queryParams: { returnUrl: state.url } // keep intended URL
+//   });
+// };
+
+import { inject } from '@angular/core';
+import { CanActivateFn, Router } from '@angular/router';
+import { getCurrentUser } from 'aws-amplify/auth';
+
+export const authGuard: CanActivateFn = async (_route, state) => {
+  const router = inject(Router);
+
+  try {
+    await getCurrentUser();
+    return true;
+  } catch {
+    return router.createUrlTree(['/login'], {
+      queryParams: { returnUrl: state.url },
+    });
+  }
+};

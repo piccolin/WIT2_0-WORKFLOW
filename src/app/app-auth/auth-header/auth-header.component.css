@@ -1,0 +1,16 @@
+/* Your existing nice animation – keep it! */
+div.fixed {
+  animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* THIS IS THE ONLY NEW LINE YOU NEED */
+div.fixed {
+  left: auto !important;
+  right: 1rem !important;   /* same as Tailwind's right-4 */
+  transform: none !important;   /* prevents any parent transform from moving it */
+}
