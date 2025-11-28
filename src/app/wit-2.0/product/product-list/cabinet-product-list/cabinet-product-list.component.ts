@@ -21,7 +21,7 @@ import { CabinetProductGraphqlService } from '@app/app-data/stores/cabinet-produ
 import { CabinetProduct, ListCabinetProductsQuery } from '@app/API.service';
 
 // Import child card component
-import {ShoppingCartCardComponent} from "@app/product/product-list/cabinet-product-list/view/shopping-cart-card/shopping-cart-card.component";
+import {ShoppingCartCardComponent} from "@app/wit-2.0/product/product-list/cabinet-product-list/view/shopping-cart-card/shopping-cart-card.component";
 
 import { Component, OnInit, inject, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';

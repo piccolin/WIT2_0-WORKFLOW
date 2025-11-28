@@ -24,11 +24,16 @@ export const createCabinetProduct = /* GraphQL */ `mutation CreateCabinetProduct
     assemblyCost
     retailPrice
     discountPrice
+    discountFactor
     name
     height
     width
     weight
+    doors
+    drawers
+    shelves
     species
+    shippingClass
     imagePath
     categories
     tags
@@ -58,11 +63,16 @@ export const updateCabinetProduct = /* GraphQL */ `mutation UpdateCabinetProduct
     assemblyCost
     retailPrice
     discountPrice
+    discountFactor
     name
     height
     width
     weight
+    doors
+    drawers
+    shelves
     species
+    shippingClass
     imagePath
     categories
     tags
@@ -92,11 +102,16 @@ export const deleteCabinetProduct = /* GraphQL */ `mutation DeleteCabinetProduct
     assemblyCost
     retailPrice
     discountPrice
+    discountFactor
     name
     height
     width
     weight
+    doors
+    drawers
+    shelves
     species
+    shippingClass
     imagePath
     categories
     tags

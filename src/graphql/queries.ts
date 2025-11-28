@@ -21,11 +21,16 @@ export const getCabinetProduct = /* GraphQL */ `query GetCabinetProduct($id: ID!
     assemblyCost
     retailPrice
     discountPrice
+    discountFactor
     name
     height
     width
     weight
+    doors
+    drawers
+    shelves
     species
+    shippingClass
     imagePath
     categories
     tags
@@ -57,11 +62,16 @@ export const listCabinetProducts = /* GraphQL */ `query ListCabinetProducts(
       assemblyCost
       retailPrice
       discountPrice
+      discountFactor
       name
       height
       width
       weight
+      doors
+      drawers
+      shelves
       species
+      shippingClass
       imagePath
       categories
       tags
@@ -104,11 +114,16 @@ export const listCabinetProductBywSku = /* GraphQL */ `query ListCabinetProductB
       assemblyCost
       retailPrice
       discountPrice
+      discountFactor
       name
       height
       width
       weight
+      doors
+      drawers
+      shelves
       species
+      shippingClass
       imagePath
       categories
       tags
@@ -151,11 +166,16 @@ export const listCabinetProductByvSku = /* GraphQL */ `query ListCabinetProductB
       assemblyCost
       retailPrice
       discountPrice
+      discountFactor
       name
       height
       width
       weight
+      doors
+      drawers
+      shelves
       species
+      shippingClass
       imagePath
       categories
       tags
@@ -200,11 +220,16 @@ export const listCabinetProductByBrandAndDoorStyle = /* GraphQL */ `query ListCa
       assemblyCost
       retailPrice
       discountPrice
+      discountFactor
       name
       height
       width
       weight
+      doors
+      drawers
+      shelves
       species
+      shippingClass
       imagePath
       categories
       tags

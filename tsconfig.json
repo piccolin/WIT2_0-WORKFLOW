@@ -3,7 +3,8 @@
   "compileOnSave": false,
   "compilerOptions": {
     "paths": {
-      "@app/*": ["./src/app/*"]
+      "@app/*": ["./src/app/*"],
+      "@wit/*": ["./src/app/wit-2.0/*"]
     },
     "outDir": "./dist/out-tsc",
     "strict": true,

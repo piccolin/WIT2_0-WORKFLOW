@@ -18,12 +18,17 @@ type CabinetProduct @model
   # price
   retailPrice:    Float
   discountPrice:  Float
+  discountFactor: Float
   # cabinet profile
   name:           String
   height:         Float
   width:          Float
   weight:         Float
+  doors:          String
+  drawers:        String
+  shelves:        String
   species:        String
+  shippingClass:   String
   # visualization:
   imagePath:      String
   # taxonomy
@@ -32,6 +37,3 @@ type CabinetProduct @model
   # UI
   publish:        Boolean
 }
-
-
-

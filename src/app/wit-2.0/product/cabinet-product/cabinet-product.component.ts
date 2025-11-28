@@ -20,15 +20,8 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { CommonModule } from '@angular/common';
 
 // Import the service
-import { CabinetProductGraphqlService } from "../../app-data/stores/cabinet-product-graphql.service";
-
-// Import generated types from Amplify API (no manual interface needed)
-import {
-  CabinetProduct,
-  ListCabinetProductsQuery,
-  GetCabinetProductQuery,
-  CreateCabinetProductMutation
-} from '../../API.service';
+import { CabinetProductGraphqlService } from "@app/app-data/stores/cabinet-product-graphql.service";
+import {CabinetProduct, CreateCabinetProductMutation, GetCabinetProductQuery, ListCabinetProductsQuery} from "@app/API.service";
 
 // -----------------------------------------------------------------
 // Component Decorator

@@ -1,0 +1,56 @@
+<p>double-check-file-upload works!</p>
+<div class="dc-file-upload">
+
+  <div class="dc-file-upload__toolbar">
+
+    <input
+      #fileInput
+      type="file"
+      accept="application/pdf,text/html"
+      class="dc-file-input"
+      [disabled]="isReviewMode || (!isLocal && !!fileName)"
+      (change)="onFileSelected($event)"
+    />
+
+    <button
+      type="button"
+      class="dc-btn-primary"
+      [disabled]="!allowSubmit || isPending"
+      [class.loading]="isPending"
+      (click)="onSubmit()"
+    >
+      <span class="dc-btn-primary__text">
+        {{ isPending ? 'Processing…' : 'Confirm Vendor File' }}
+      </span>
+      <span class="dc-btn-primary__spinner" *ngIf="isPending"></span>
+    </button>
+
+    <button
+      type="button"
+      class="dc-btn-secondary"
+      (click)="reparse()"
+      *ngIf="isLocal || isAdmin"
+    >
+      Reparse
+    </button>
+
+    <button
+      type="button"
+      class="dc-btn-secondary"
+      (click)="download()"
+      *ngIf="vendorFile"
+    >
+      Download File
+    </button>
+
+  </div>
+
+  <div class="alert alert-danger" *ngIf="error">
+    {{ error }}
+  </div>
+
+  <pre *ngIf="isLocal && extractResult" class="dc-json-preview">
+<code>{{ extractResult | json }}</code>
+  </pre>
+
+</div>

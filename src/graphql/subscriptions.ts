@@ -23,11 +23,16 @@ export const onCreateCabinetProduct = /* GraphQL */ `subscription OnCreateCabine
     assemblyCost
     retailPrice
     discountPrice
+    discountFactor
     name
     height
     width
     weight
+    doors
+    drawers
+    shelves
     species
+    shippingClass
     imagePath
     categories
     tags
@@ -56,11 +61,16 @@ export const onUpdateCabinetProduct = /* GraphQL */ `subscription OnUpdateCabine
     assemblyCost
     retailPrice
     discountPrice
+    discountFactor
     name
     height
     width
     weight
+    doors
+    drawers
+    shelves
     species
+    shippingClass
     imagePath
     categories
     tags
@@ -89,11 +99,16 @@ export const onDeleteCabinetProduct = /* GraphQL */ `subscription OnDeleteCabine
     assemblyCost
     retailPrice
     discountPrice
+    discountFactor
     name
     height
     width
     weight
+    doors
+    drawers
+    shelves
     species
+    shippingClass
     imagePath
     categories
     tags
