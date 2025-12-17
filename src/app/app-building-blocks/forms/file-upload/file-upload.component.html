@@ -1,0 +1,103 @@
+<!-- *****************  FILE UPLOAD CARD  ********************** -->
+<div class="upload-card">
+  <!-- Title and short help text -->
+  <div class="upload-header">
+    <h2 class="upload-title">Upload a File</h2>
+    <p class="upload-subtitle">
+      Supported formats: <span class="hint">{{ allowedExtensionsDisplay }}</span>
+      &nbsp;•&nbsp; Max size: <span class="hint">{{ maxFileSizeDisplay }}</span>
+    </p>
+  </div>
+
+  <!-- *****************  DRAG & DROP MODE  ********************** -->
+  <div *ngIf="uploadUi === 'dragDrop'" class="upload-body">
+    <!-- Drop area: user can drag a file here or click to browse -->
+    <div
+      class="dropzone"
+      [class.dropzone-over]="isDragOver"
+      [class.dropzone-disabled]="isUploading"
+      role="button"
+      tabindex="0"
+      aria-label="Drag and drop a file here, or press Enter to browse"
+      (click)="onBrowseClick(fileInput)"
+      (keydown)="onDropzoneKeydown($event, fileInput)"
+      (dragover)="onDragOver($event)"
+      (dragleave)="onDragLeave($event)"
+      (drop)="onFileDropped($event)"
+    >
+      <div class="dropzone-inner">
+        <!-- Simple inline icon (keeps it professional without extra libs) -->
+        <svg class="dropzone-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M7 18a4 4 0 0 1-.4-8 5 5 0 0 1 9.8-1.1A4 4 0 0 1 17 18H7Zm5-12a3 3 0 0 0-2.9 2.2l-.2.8-.8.1A2.5 2.5 0 0 0 7 16h10a2.5 2.5 0 0 0-.6-5l-.7-.2-.2-.7A3 3 0 0 0 12 6Zm1 7v5h-2v-5H8l4-4 4 4h-3Z"></path>
+        </svg>
+
+        <div class="dropzone-text">
+          <div class="dropzone-title">Drag &amp; drop your file here</div>
+          <div class="dropzone-subtitle">or click to browse</div>
+        </div>
+      </div>
+
+      <!-- Hidden file input used by the dropzone -->
+      <input #fileInput type="file" class="file-input-hidden" [accept]="acceptAttr" (change)="onFileSelected($event)" />
+    </div>
+
+    <!-- Actions -->
+    <div class="actions-row">
+      <button type="button" class="upload-button" (click)="onUploadClick()" [disabled]="!selectedFile || isUploading">
+        Upload
+      </button>
+
+      <button type="button" class="secondary-button" (click)="onClearSelection()" [disabled]="!selectedFile || isUploading">
+        Remove
+      </button>
+    </div>
+  </div>
+
+  <!-- *****************  SIMPLE MODE  *************************** -->
+  <div *ngIf="uploadUi === 'simple'" class="upload-body">
+    <!-- Basic file picker row -->
+    <div class="upload-row">
+      <label class="file-input-label">
+        <span>Select file</span>
+        <input type="file" [accept]="acceptAttr" (change)="onFileSelected($event)" class="file-input" />
+      </label>
+
+      <button type="button" class="upload-button" (click)="onUploadClick()" [disabled]="!selectedFile || isUploading">
+        Upload
+      </button>
+
+      <button type="button" class="secondary-button" (click)="onClearSelection()" [disabled]="!selectedFile || isUploading">
+        Remove
+      </button>
+    </div>
+  </div>
+
+  <!-- *****************  SELECTED FILE DETAILS  ***************** -->
+  <div class="selected-file" *ngIf="selectedFile">
+    <div class="selected-file-main">
+      <div class="selected-file-name">{{ selectedFile?.name }}</div>
+      <div class="selected-file-meta">{{ selectedFileMeta }}</div>
+    </div>
+  </div>
+
+  <!-- *****************  PROGRESS + SUCCESS  ******************** -->
+  <div class="upload-progress" *ngIf="uploadProgress !== null">
+    <div class="progress-row">
+      <div class="progress-label">Upload progress</div>
+      <div class="progress-value">{{ uploadProgress }}%</div>
+    </div>
+
+    <div class="progress-bar" role="progressbar" [attr.aria-valuenow]="uploadProgress" aria-valuemin="0" aria-valuemax="100">
+      <div class="progress-bar-fill" [style.width.%]="uploadProgress"></div>
+    </div>
+  </div>
+
+  <div class="upload-success" *ngIf="uploadSuccess">
+    File uploaded successfully.
+  </div>
+
+  <!-- *****************  ERROR MESSAGE  ************************ -->
+  <div class="upload-error" *ngIf="uploadError">
+    {{ uploadError }}
+  </div>
+</div>

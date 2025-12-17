@@ -3,6 +3,7 @@
   "compileOnSave": false,
   "compilerOptions": {
     "paths": {
+      "@scr/*": ["./src/*"],
       "@app/*": ["./src/app/*"],
       "@wit/*": ["./src/app/wit-2.0/*"]
     },
