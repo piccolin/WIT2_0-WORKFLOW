@@ -1,19 +1,3 @@
-import {Injectable} from '@angular/core';
-import {TransformationRequest} from '../../../models/transform.models';
-
-import {TsgParseService} from '@app/app-transformer/services/parsers/vendors/tsg-parse.service';
-import {TsgNormalizeService} from '@app/app-transformer/services/normalizers/vendors/tsg-normalize.service';
-import {TsgDefaultValueService} from '@app/app-transformer/services/defaulters/vendors/tsg-default-value.service';
-import {TsgCalculateService} from '@app/app-transformer/services/calculators/vendors/tsg-calculate.service';
-import {TsgDecorateService} from '@app/app-transformer/services/decorators/vendors/tsg-decorate.service';
-import {TsgMapToModelService} from '@app/app-transformer/services/mappers/vendors/tsg-map-to-model.service';
-import {IntegrationPayloadGraphqlService} from "@app/app-data/services/stores/graphql/integration-payload-graphql.service";
-import {IntegrationPayload, PayLoadType} from "@scr/API";
-import {PdfTextModelJsonUtilService} from "@app/app-parse/pdf-parser/utils/pdf-text-model-to-json.util";
-import {PdfPageText} from "@app/app-parse/pdf-parser/models/pdf-page-text.model";
-import {TsgPdfExtractorService} from "@app/app-transformer/services/extractors/vendors/tsg/tsg-pdf-extractor";
-import {PdfTextBehaviorialModel} from "@app/app-parse/pdf-parser/models/pdf-text-behaviorial.model";
-
 /**
  * @Filename:    tsg-transformer.service.ts
  * @Type:        Service
@@ -56,6 +40,20 @@ import {PdfTextBehaviorialModel} from "@app/app-parse/pdf-parser/models/pdf-text
  * @Notes:
  *   - Keep this service orchestration-only. Business logic belongs in stage services.
  */
+import {Injectable} from '@angular/core';
+import {TransformationRequest} from '../../../models/transform.models';
+import {TsgParseService} from '@app/app-transformer/services/parsers/vendors/tsg-parse.service';
+import {TsgNormalizeService} from '@app/app-transformer/services/normalizers/vendors/tsg-normalize.service';
+import {TsgDefaultValueService} from '@app/app-transformer/services/defaulters/vendors/tsg-default-value.service';
+import {TsgCalculateService} from '@app/app-transformer/services/calculators/vendors/tsg-calculate.service';
+import {TsgDecorateService} from '@app/app-transformer/services/decorators/vendors/tsg-decorate.service';
+import {TsgMapToModelService} from '@app/app-transformer/services/mappers/vendors/tsg-map-to-model.service';
+import {IntegrationPayloadGraphqlService} from "@app/app-data/services/stores/graphql/integration-payload-graphql.service";
+import {PdfTextModelJsonUtilService} from "@app/app-parse/pdf-parser/utils/pdf-text-model-to-json.util";
+import {PdfPageText} from "@app/app-parse/pdf-parser/models/pdf-page-text.model";
+import {TsgPdfExtractorService} from "@app/app-transformer/services/extractors/vendors/tsg/tsg-pdf-extractor";
+import {PdfTextBehaviorialModel} from "@app/app-parse/pdf-parser/models/pdf-text-behaviorial.model";
+
 @Injectable({ providedIn: 'root' })
 export class TsgTransformerService {
 
@@ -104,22 +102,22 @@ export class TsgTransformerService {
     const extracted =  this.tsgPdfExtractorService.extract(parsedPdf as PdfTextBehaviorialModel);
     console.log(extracted)
 
-    // 4) Normalize values (dates, IDs, casing, number formats, etc.)
+    // 5) Normalize values (dates, IDs, casing, number formats, etc.)
     const normalized = this.normalizeService.normalize(extracted, request);
 
-    // 5) Apply defaults for required fields not present in vendor file
+    // 6) Apply defaults for required fields not present in vendor file
     const withDefaults = this.defaultValueService.applyDefaults(normalized, request);
 
-    // 6) Calculate derived fields
+    // 7) Calculate derived fields
     const calculated = this.calculateService.calculate(withDefaults, request);
 
-    // 7) Decorate/enrich
+    // 8) Decorate/enrich
     const decorated = this.decorateService.decorate(calculated, request);
 
-    // 8) Map to canonical DB schema (Partial<SalesOrder>)
+    // 9) Map to canonical DB schema (Partial<SalesOrder>)
     return this.mapToModelService.mapToModel(decorated, request);
 
-    // 9) write to DB
+    // 10) write to DB
   }
 
   // -----------------------------------------------------------------
