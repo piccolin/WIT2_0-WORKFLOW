@@ -1,0 +1,2 @@
+1) Simplified services names
+2) Put together TSG skeleton flow (pre-alpha)

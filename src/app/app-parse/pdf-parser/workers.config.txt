@@ -1,0 +1,48 @@
+/**
+ * Why Workers (pdf.worker.mjs)
+ *
+ * PDF parsing is heavy. Without the worker, the browser tries to do it
+ * on the main thread and your app can freeze/stutter during parsing.
+ * The worker moves that work into a separate thread.
+ *
+ */
+
+
+/**
+ *
+ * How to use Worker (pdf.worker.mjs)
+ *
+ */
+
+Files you need for the worker setup
+
+1) src/assets/pdf.worker.mjs
+  This is not code you write — it’s a copied artifact.
+
+  Copy from:
+  node_modules/pdfjs-dist/build/pdf.worker.mjs
+
+  Paste into:
+  src/assets/pdf.worker.mjs
+
+  That’s the file pdf.js loads at runtime to do parsing off the UI thread.
+
+
+2) angular.json assets entry
+
+  Make sure your project is already copying src/assets (most Angular apps do). In angular.json:
+
+  "assets": [
+    "src/assets"
+  ]
+
+
+3) Your service: pdf-parser.service.ts
+
+In pdf-parser.service.ts ensureWorkerConfigured() keep:
+
+pdfjsLib.GlobalWorkerOptions.workerSrc = '/assets/pdf.worker.mjs';
+
+
+That line is what “connects” pdf.js to the file you copied into assets.
+

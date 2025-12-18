@@ -1,26 +1,35 @@
 import { CommonModule } from '@angular/common';
-import { HttpClient, HttpEvent, HttpEventType } from '@angular/common/http';
-import { Component, Input, OnInit } from '@angular/core';
-import { finalize } from 'rxjs/operators';
+import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { SpinnerService } from '@app/app-building-blocks/spinner/services/spinner.service';
 
 /**
- * @Filename:    FileUploadComponent
+ * @Filename:    file-upload.component.ts
  * @Type:        Component
- * @Date:        2025-12-08
- * @Author:      Guido A. Piccolino Jr.
+ * @Date:        2025-12-18
  *
  * @Description:
- *   File upload component with two UX modes:
- *    1) simple: classic "Choose file" + Upload
- *    2) dragDrop: professional dropzone (drag & drop or click to browse) + Upload
+ *   Local-only file picker/dropzone that emits the file (and optionally content)
+ *   to the parent component. No server calls.
  *
  *   Restricts uploads to: *.csv, *.pdf, *.json, *.xml
  *   Restricts uploads by size via maxFileSizeBytes/maxFileSizeMb inputs
- *
- * @Notes:
- *   - Browser "accept" filters the picker; validation also enforces allowed types/sizes on drop.
  */
+
+export interface FileUploadPayloadEvent {
+  file: File;
+  name: string;
+  extension: string;
+  size: number;
+  mimeType: string;
+  arrayBuffer: ArrayBuffer;
+  text?: string; // present for non-pdf (csv/json/xml) by default
+}
+
+export interface FileUploadErrorEvent {
+  file?: File;
+  message: string;
+  error?: any;
+}
 
 @Component({
   selector: 'wc-file-upload',
@@ -69,6 +78,30 @@ export class FileUploadComponent implements OnInit {
     }
   }
 
+  /**
+   * If true, the component also decodes text for csv/json/xml.
+   * For pdf, only ArrayBuffer is emitted.
+   */
+  @Input() public emitTextContent: boolean = true;
+
+  // -----------------------------------------------------------------
+  // Outputs
+  // -----------------------------------------------------------------
+  /** Fires immediately when a file is selected/dropped and passes validation. */
+  @Output() public selected: EventEmitter<File> = new EventEmitter<File>();
+
+  /** Fires as the file is read locally (0..100). */
+  @Output() public progressChanged: EventEmitter<number> = new EventEmitter<number>();
+
+  /** Fires when user clicks Upload and the file is read and ready to use. */
+  @Output() public uploaded: EventEmitter<FileUploadPayloadEvent> = new EventEmitter<FileUploadPayloadEvent>();
+
+  /** Fires on validation/read errors. */
+  @Output() public failed: EventEmitter<FileUploadErrorEvent> = new EventEmitter<FileUploadErrorEvent>();
+
+  /** Fires when selection is cleared. */
+  @Output() public cleared: EventEmitter<void> = new EventEmitter<void>();
+
   // -----------------------------------------------------------------
   // Runtime State
   // -----------------------------------------------------------------
@@ -86,13 +119,13 @@ export class FileUploadComponent implements OnInit {
   // -----------------------------------------------------------------
   // DI
   // -----------------------------------------------------------------
-  constructor(private http: HttpClient, private loader: SpinnerService) {}
+  constructor(private loader: SpinnerService) {}
 
   // -----------------------------------------------------------------
   // Lifecycle
   // -----------------------------------------------------------------
   ngOnInit(): void {
-    // no-op for now
+    // no-op
   }
 
   // -----------------------------------------------------------------
@@ -149,64 +182,71 @@ export class FileUploadComponent implements OnInit {
     if (this.isUploading) return;
     this.selectedFile = null;
     this.resetStatus();
+    this.cleared.emit();
   }
 
-  public onUploadClick(): void {
+  public async onUploadClick(): Promise<void> {
     if (!this.selectedFile) {
       this.uploadError = 'Please choose a file before uploading.';
       this.uploadSuccess = false;
+      this.failed.emit({ message: this.uploadError });
       return;
     }
+
+    const file = this.selectedFile;
 
     // Safety net (in case something bypassed UI)
-    if (!this.isAllowedFile(this.selectedFile)) {
+    if (!this.isAllowedFile(file)) {
       this.uploadError = `Unsupported file type. Allowed: ${this.allowedExtensionsDisplay}.`;
       this.uploadSuccess = false;
+      this.failed.emit({ file, message: this.uploadError });
       return;
     }
 
-    if (!this.isAllowedSize(this.selectedFile)) {
+    if (!this.isAllowedSize(file)) {
       this.uploadError = `File is too large. Max size: ${this.maxFileSizeDisplay}.`;
       this.uploadSuccess = false;
+      this.failed.emit({ file, message: this.uploadError });
       return;
     }
-
-    const formData = new FormData();
-    formData.append('file', this.selectedFile);
-
-    const uploadUrl = '/api/upload';
 
     this.loader.show();
     this.isUploading = true;
     this.uploadError = null;
     this.uploadSuccess = false;
     this.uploadProgress = 0;
+    this.progressChanged.emit(0);
 
-    this.http
-      .post(uploadUrl, formData, { reportProgress: true, observe: 'events' })
-      .pipe(
-        finalize(() => {
-          this.isUploading = false;
-          this.loader.hide();
-        })
-      )
-      .subscribe({
-        next: (event: HttpEvent<any>) => {
-          if (event.type === HttpEventType.UploadProgress && event.total) {
-            this.uploadProgress = Math.round((100 * event.loaded) / event.total);
-          } else if (event.type === HttpEventType.Response) {
-            this.uploadSuccess = true;
-            this.uploadProgress = 100;
-          }
-        },
-        error: (err) => {
-          // eslint-disable-next-line no-console
-          console.error('File upload failed', err);
-          this.uploadError = 'File upload failed. Please try again.';
-          this.uploadSuccess = false;
-          this.uploadProgress = null;
-        }
+    try {
+      const { arrayBuffer, text } = await this.readFile(file, (p) => {
+        this.uploadProgress = p;
+        this.progressChanged.emit(p);
       });
+
+      this.uploadProgress = 100;
+      this.progressChanged.emit(100);
+      this.uploadSuccess = true;
+
+      this.uploaded.emit({
+        file,
+        name: file.name,
+        extension: this.getExtension(file.name),
+        size: file.size,
+        mimeType: file.type || 'application/octet-stream',
+        arrayBuffer,
+        text,
+      });
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.error('Local file read failed', e);
+      this.uploadError = 'File read failed. Please try again.';
+      this.uploadSuccess = false;
+      this.uploadProgress = null;
+      this.failed.emit({ file, message: this.uploadError, error: e });
+    } finally {
+      this.isUploading = false;
+      this.loader.hide();
+    }
   }
 
   // -----------------------------------------------------------------
@@ -232,6 +272,7 @@ export class FileUploadComponent implements OnInit {
       this.selectedFile = null;
       this.resetStatus();
       this.uploadError = `Unsupported file type. Allowed: ${this.allowedExtensionsDisplay}.`;
+      this.failed.emit({ file, message: this.uploadError });
       return;
     }
 
@@ -239,18 +280,18 @@ export class FileUploadComponent implements OnInit {
       this.selectedFile = null;
       this.resetStatus();
       this.uploadError = `File is too large. Max size: ${this.maxFileSizeDisplay}.`;
+      this.failed.emit({ file, message: this.uploadError });
       return;
     }
 
     this.selectedFile = file;
     this.resetStatus();
+    this.selected.emit(file);
   }
 
   private isAllowedFile(file: File): boolean {
-    const name = (file?.name || '').trim().toLowerCase();
-    const dot = name.lastIndexOf('.');
-    if (dot < 0) return false;
-    const ext = name.substring(dot + 1);
+    const ext = this.getExtension(file?.name || '');
+    if (!ext) return false;
     return this.allowedExtensions.map((e) => e.toLowerCase()).includes(ext);
   }
 
@@ -263,6 +304,50 @@ export class FileUploadComponent implements OnInit {
     this.uploadError = null;
     this.uploadSuccess = false;
     this.uploadProgress = null;
+  }
+
+  private getExtension(filename: string): string {
+    const name = (filename || '').trim().toLowerCase();
+    const dot = name.lastIndexOf('.');
+    if (dot < 0) return '';
+    return name.substring(dot + 1);
+  }
+
+  private async readFile(file: File, onProgress: (p: number) => void): Promise<{ arrayBuffer: ArrayBuffer; text?: string }> {
+    const arrayBuffer = await this.readAsArrayBuffer(file, onProgress);
+
+    const ext = this.getExtension(file.name);
+    const isPdf = ext === 'pdf';
+
+    if (!this.emitTextContent || isPdf) {
+      return { arrayBuffer };
+    }
+
+    const text = new TextDecoder('utf-8').decode(arrayBuffer);
+    return { arrayBuffer, text };
+  }
+
+  private readAsArrayBuffer(file: File, onProgress: (p: number) => void): Promise<ArrayBuffer> {
+    return new Promise<ArrayBuffer>((resolve, reject) => {
+      const reader = new FileReader();
+
+      reader.onerror = () => reject(reader.error);
+      reader.onabort = () => reject(new Error('File read aborted'));
+
+      reader.onprogress = (evt: ProgressEvent<FileReader>) => {
+        if (!evt.lengthComputable) return;
+        const p = Math.round((100 * evt.loaded) / evt.total);
+        onProgress(p);
+      };
+
+      reader.onload = () => {
+        const result = reader.result;
+        if (result instanceof ArrayBuffer) resolve(result);
+        else reject(new Error('Unexpected FileReader result type'));
+      };
+
+      reader.readAsArrayBuffer(file);
+    });
   }
 
   private formatBytes(bytes: number): string {

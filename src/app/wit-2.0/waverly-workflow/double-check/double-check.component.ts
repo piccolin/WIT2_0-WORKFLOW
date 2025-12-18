@@ -1,5 +1,7 @@
-import { Component } from '@angular/core';
-import {FileUploadComponent} from "@app/app-building-blocks/forms/file-upload/file-upload.component";
+import {Component} from '@angular/core';
+import {FileUploadComponent, FileUploadPayloadEvent} from "@app/app-building-blocks/forms/file-upload/file-upload.component";
+import {TransformerSelectorService} from "@app/app-transformer/services/transformers/transformer-selector.service";
+import {FileType, OrderType, TransformationRequest, Vendors} from "@app/app-transformer/models/transform.models";
 
 @Component({
   selector: 'app-double-check',
@@ -12,15 +14,34 @@ import {FileUploadComponent} from "@app/app-building-blocks/forms/file-upload/fi
 })
 export class DoubleCheckComponent {
 
+  constructor(private transformerSelectorService: TransformerSelectorService) {
+  }
+
   // -----------------------------------------------------------------
   // UI Config
   // -----------------------------------------------------------------
   public allowedExtensions: string[] = ['csv', 'pdf', 'json', 'xml'];
+  public maxSizeMb: number = 5;
 
-  // Option 1: MB helper (recommended for readability)
-  public maxSizeMb: number = 25;
+  // -----------------------------------------------------------------
+  // Listeners
+  // -----------------------------------------------------------------
+  async onUploadCompleted(fileUploadPayloadEvent:FileUploadPayloadEvent){
+    let transformationRequest: TransformationRequest = {
+      fileType:   FileType.Pdf,
+      vendor:     Vendors.Tsg,
+      orderType:  OrderType.Confirmation,
+      file:       fileUploadPayloadEvent.file,
+      rawText:    undefined
+    }
+    await this.transform(transformationRequest)
+  }
 
-  // Option 2: Bytes (if you prefer precision)
-  // public maxSizeBytes: number = 25 * 1024 * 1024;
+  // -----------------------------------------------------------------
+  // Business Logic
+  // -----------------------------------------------------------------
+  async transform(transformationRequest: TransformationRequest){
+    await this.transformerSelectorService.transform(transformationRequest)
+  }
 
 }

@@ -2,5 +2,6 @@
   [uploadUi]="'dragDrop'"
   [allowedExtensions]="allowedExtensions"
   [maxFileSizeMb]="maxSizeMb"
+  (uploaded)="onUploadCompleted($event)"
 ></wc-file-upload>
 
