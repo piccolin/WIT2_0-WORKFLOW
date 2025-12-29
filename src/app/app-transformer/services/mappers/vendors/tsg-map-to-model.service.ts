@@ -9,16 +9,16 @@
 
 import { Injectable } from '@angular/core';
 import { MapperBaseService } from '../mapper-base.service';
-import { TransformationRequest } from '../../../models/transform.models';
+import {ExtractedOrder} from "@app/app-transformer/services/extractors/models/extract.model";
+import {SalesOrderMapResult, Vendors} from "@app/app-transformer/models/transform.models";
 
 @Injectable({
   providedIn: 'root'
 })
 export class TsgMapToModelService extends MapperBaseService {
 
-  public override mapToModel(input: unknown, request: TransformationRequest): unknown {
-    // TODO: map to Partial<SalesOrder | PurchaseOrder | ConfirmationOrder> based on request.orderType.
-    return input;
+  public override mapToModel(input: ExtractedOrder, vendor: Vendors): SalesOrderMapResult{
+    //map to Partial<SalesOrder>
+    return this.buildSalesOrderAndItems(input, vendor);
   }
-
 }

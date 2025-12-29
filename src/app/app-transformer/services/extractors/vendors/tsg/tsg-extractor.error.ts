@@ -9,6 +9,8 @@
  *   Layman explanation:
  *   Instead of throwing random strings, we throw a consistent Error type
  *   that identifies which vendor failed and why.
+ *
+ *   TODO: send email upon error
  */
 
 export class ExtractorError extends Error {

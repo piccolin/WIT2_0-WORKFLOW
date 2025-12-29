@@ -61,7 +61,7 @@ export class PdfTextBehaviorialModel {
     if (!page) return [];
 
     // A “line” in a PDF is not a real line like a Word doc — it’s text pieces with similar Y coordinates.
-    // We group items into lines using a small tolerance.
+    // We group orderItems into lines using a small tolerance.
     const lineTolerance = 2;
 
     const lines = PdfGeometry.buildLines(page.items, lineTolerance);

@@ -41,7 +41,7 @@
  *   - Keep this service orchestration-only. Business logic belongs in stage services.
  */
 import {Injectable} from '@angular/core';
-import {TransformationRequest} from '../../../models/transform.models';
+import {SalesOrderMapResult, TransformationRequest, Vendors} from '../../../models/transform.models';
 import {TsgParseService} from '@app/app-transformer/services/parsers/vendors/tsg-parse.service';
 import {TsgNormalizeService} from '@app/app-transformer/services/normalizers/vendors/tsg-normalize.service';
 import {TsgDefaultValueService} from '@app/app-transformer/services/defaulters/vendors/tsg-default-value.service';
@@ -50,9 +50,10 @@ import {TsgDecorateService} from '@app/app-transformer/services/decorators/vendo
 import {TsgMapToModelService} from '@app/app-transformer/services/mappers/vendors/tsg-map-to-model.service';
 import {IntegrationPayloadGraphqlService} from "@app/app-data/services/stores/graphql/integration-payload-graphql.service";
 import {PdfTextModelJsonUtilService} from "@app/app-parse/pdf-parser/utils/pdf-text-model-to-json.util";
-import {PdfPageText} from "@app/app-parse/pdf-parser/models/pdf-page-text.model";
-import {TsgPdfExtractorService} from "@app/app-transformer/services/extractors/vendors/tsg/tsg-pdf-extractor";
+import {TsgPdfExtractorService} from "@app/app-transformer/services/extractors/vendors/tsg/tsg-pdf-extractor.service";
 import {PdfTextBehaviorialModel} from "@app/app-parse/pdf-parser/models/pdf-text-behaviorial.model";
+import {ExtractedOrder} from "@app/app-transformer/services/extractors/models/extract.model";
+import {SalesOrder} from "@scr/API";
 
 @Injectable({ providedIn: 'root' })
 export class TsgTransformerService {
@@ -78,46 +79,41 @@ export class TsgTransformerService {
 
   /**
    * Runs the TSG canonicalization pipeline and returns a canonical partial model.
-   * NOTE: Using `any` for now so the handoff compiles while implementation is completed.
    */
-  public async transform(request: TransformationRequest): Promise<any> {
+  public async transform(request: TransformationRequest): Promise<void> {
 
     // 1) Parse vendor file into a predictable intermediate structure
     const parsedPdf = await this.parseService.parse(request);
     console.log("parsedPdf: \n%o", parsedPdf);
 
-    // 2) Save payload as JSON
-    // @ts-ignore
-    const pdfTextModelAsJSON = this.pdfTextModelJsonUtilService.pagesToJson(parsedPdf['pages'] as Array<PdfPageText>)
-    console.log("pdfTextModelAsJSOObj:\n%o", JSON.stringify(pdfTextModelAsJSON, null, 2))
+    // 2) Extract to temporary model
+    const extractedOrder: ExtractedOrder =  this.tsgPdfExtractorService.extract(parsedPdf as PdfTextBehaviorialModel);
+    console.log("extractedOrder: \n%o", extractedOrder)
 
-    // 3) Save JSON payload to DB
-    // let input: Partial <IntegrationPayload> = {
-    //   payload: pdfTextModelAsJSON.toString(),
-    //   type:    PayLoadType.CONFRINATION
-    // }
-    // this.integrationPayloadGraphqlService.createIntegrationPayload(input)
+    // 3) Store Input Model
 
-    // 4) Extract to temporary model
-    const extracted =  this.tsgPdfExtractorService.extract(parsedPdf as PdfTextBehaviorialModel);
-    console.log(extracted)
+    // 4) Normalize values (dates, IDs, casing, number formats, etc.)
+    const normalizedExtractedOrder: ExtractedOrder  = this.normalizeService.normalize(extractedOrder);
+    console.log("normalizedExtractedOrder: \n%o", normalizedExtractedOrder)
 
-    // 5) Normalize values (dates, IDs, casing, number formats, etc.)
-    const normalized = this.normalizeService.normalize(extracted, request);
+    // 5) Apply defaults for required fields not present in vendor file
+    const extractedOrderWithDefaults: ExtractedOrder  = this.defaultValueService.applyDefaults(normalizedExtractedOrder);
+    console.log("extractedOrderWithDefaults: \n%o", extractedOrderWithDefaults)
 
-    // 6) Apply defaults for required fields not present in vendor file
-    const withDefaults = this.defaultValueService.applyDefaults(normalized, request);
+    // 6) Calculate derived fields
+    const calculatedExtractedOrderWithDefaults: ExtractedOrder  = this.calculateService.calculate(extractedOrderWithDefaults);
+    console.log("calculatedExtractedOrderWithDefaults: \n%o", calculatedExtractedOrderWithDefaults)
 
-    // 7) Calculate derived fields
-    const calculated = this.calculateService.calculate(withDefaults, request);
+    // 7) Decorate/enrich
+    const decoratedCalculatedExtractedOrderWithDefaults: ExtractedOrder  = this.decorateService.decorate(calculatedExtractedOrderWithDefaults);
+    console.log("decoratedCalculatedExtractedOrderWithDefaults: \n%o", decoratedCalculatedExtractedOrderWithDefaults)
 
-    // 8) Decorate/enrich
-    const decorated = this.decorateService.decorate(calculated, request);
+    // 7) Map to canonical DB schema (Partial<SalesOrder>)
+    const salesOrderAndItems: SalesOrderMapResult =  <SalesOrderMapResult>this.mapToModelService.mapToModel(decoratedCalculatedExtractedOrderWithDefaults,Vendors.Tsg);
+    console.log("salesOrder: \n%o", salesOrderAndItems?.salesOrder)
+    console.log("salesOrderItems: \n%o", salesOrderAndItems?.salesOrderItems)
 
-    // 9) Map to canonical DB schema (Partial<SalesOrder>)
-    return this.mapToModelService.mapToModel(decorated, request);
-
-    // 10) write to DB
+    // 8) Write to DB
   }
 
   // -----------------------------------------------------------------

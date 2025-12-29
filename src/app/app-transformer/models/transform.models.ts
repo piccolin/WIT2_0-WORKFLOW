@@ -11,7 +11,7 @@
  *   - The DB schema is the canonical model (Amplify codegen types).
  *   - Parsing produces Partial<T> where T is SalesOrder / PurchaseOrder / ConfirmationOrder.
  */
-import {ConfirmationOrder, PurchaseOrder, SalesOrder} from "@scr/API";
+import {ConfirmationOrder, PurchaseOrder, SalesOrder, SalesOrderItems} from "@scr/API";
 
 
 // -----------------------------------------------------------------
@@ -64,5 +64,14 @@ export interface TransformationResult<TCanonical> {
   model: Partial<TCanonical>;
   warnings: string[];
   errors: string[];
+}
+
+// -----------------------------------------------------------------
+// Canonicals
+// -----------------------------------------------------------------
+
+export interface SalesOrderMapResult {
+  salesOrder: SalesOrder;
+  salesOrderItems: SalesOrderItems[];
 }
 

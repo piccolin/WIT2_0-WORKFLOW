@@ -12,7 +12,6 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { BaseGraphqlService } from '@app/app-data/services/core/base-graphql.service';
-
 // Queries
 import { getConfirmationOrder, listConfirmationOrders } from '@scr/graphql/queries';
 // Mutations

@@ -1,24 +1,18 @@
 /**
  * @Filename:    tsg-normalize.service.ts
  * @Type:        Service
- * @Date:        2025-12-17
+ * @Date:        2025-12-29
  *
  * @Description:
- *   Normalizes parsed TSG data into a consistent shape for downstream steps.
+ *   TSG normalizer.
+ *   Uses the shared base normalization rules. Add TSG-only rules here if needed later.
  */
 
 import { Injectable } from '@angular/core';
 import { NormalizerBaseService } from '../normalizer-base.service';
-import { TransformationRequest } from '../../../models/transform.models';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class TsgNormalizeService extends NormalizerBaseService {
-
-  public override normalize(input: unknown, request: TransformationRequest): unknown {
-    // TODO: trim strings, standardize dates, standardize currency, etc.
-    return input;
-  }
-
+  // No override needed right now — base normalize() handles standard cleanup.
 }
+

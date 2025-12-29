@@ -4,11 +4,11 @@
  * @Date:        2025-12-18
  *
  * @Description:
- *   Converts PdfTextBehaviorialModel (and nested PdfPageText/items) into a plain
+ *   Converts PdfTextBehaviorialModel (and nested PdfPageText/orderItems) into a plain
  *   JSON-safe object (no class instances / prototypes).
  *
  *   Output shape matches your DevTools dump:
- *     { pages: [ { pageNumber, pageWidth, pageHeight, items: [...] }, ... ] }
+ *     { pages: [ { pageNumber, pageWidth, pageHeight, orderItems: [...] }, ... ] }
  */
 
 import { Injectable } from '@angular/core';

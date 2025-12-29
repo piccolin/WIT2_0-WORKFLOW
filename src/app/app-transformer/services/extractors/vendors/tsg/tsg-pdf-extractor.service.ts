@@ -1,44 +1,32 @@
 /**
  * @Filename:    tsg-pdf-extractor.service.ts
  * @Type:        Service
- * @Date:        2025-12-18
+ * @Date:        2025-12-29
  *
  * @Description:
  *   Vendor-specific extraction rules for TSG PDFs.
  *
- *   Layman explanation:
- *   A PDF is not a “real table” or “real form”.
- *   It’s just text placed on a page at x/y positions.
+ *   Explanation:
+ *   A PDF is basically a picture of text. It is NOT a real form or database.
+ *   So we "hunt" for labels (like "Ship To") and then read the text that sits
+ *   under or beside those labels.
  *
- *   Our PdfTextBehaviorialModel gives us human-friendly helpers like:
- *   - first("Ship To") -> find the label location
- *   - getBelow(label, 4, 2) -> read lines underneath the label
- *   - getRight(label, 1, 3) -> read tokens to the right
- *   - getTable(label, table) -> build table rows from a header label
+ *   We use PdfTextBehavioralModel helpers like:
+ *   - first("Ship To")          -> find where the label is on the page
+ *   - getBelow(label, lines, x) -> read lines beneath the label
+ *   - getRight(label, a, b)     -> read tokens to the right of the label
+ *   - getTable(label, table)    -> read a table using a header as the start point
  *
- *   Coder’s note:
- *   These rules are intentionally strict.
- *   If TSG changes their layout, we WANT extraction to fail loudly so we can fix it.
+ *   Why so strict?
+ *   If TSG changes their layout, we WANT this to fail loudly so we notice quickly.
  */
 
 import { Injectable } from '@angular/core';
-
 import { PdfTextBehaviorialModel } from '@app/app-parse/pdf-parser/models/pdf-text-behaviorial.model';
 import { PdfTable } from '@app/app-parse/pdf-parser/models/pdf-table-behaviorial.model';
 import { PdfGeometry } from '@app/app-parse/pdf-parser/helpers/pdf-geometry';
-
-import { ConfirmationOrder } from '@scr/API';
 import { ExtractorError } from '@app/app-transformer/services/extractors/vendors/tsg/tsg-extractor.error';
-
-export interface TsgConfirmationItemModel {
-  item?: string | null;
-  qty?: string | null;
-  description?: string | null;
-  each?: number | null;
-  total?: number | null;
-  additional_details?: string | null;
-  backorder?: string | null;
-}
+import {ExtractedOrder, ExtractedOrderItem} from "@app/app-transformer/services/extractors/models/extract.model";
 
 @Injectable({ providedIn: 'root' })
 export class TsgPdfExtractorService {
@@ -47,104 +35,115 @@ export class TsgPdfExtractorService {
   // Public API
   // -----------------------------------------------------------------
 
-  public extract(pdf: PdfTextBehaviorialModel): Partial<ConfirmationOrder> {
+  /**
+   * This is the main entry point.
+   * Provide a PDF (already converted into searchable text),
+   * and get back a clean extracted order model for the UI/services.
+   */
+  public extract(pdf: PdfTextBehaviorialModel): ExtractedOrder {
+    // This is our vendor-specific error wrapper so failures are easy to identify.
     const err = new ExtractorError('tsg');
 
     // ---------------------------------------------------------------
     // Shipping Address
     // ---------------------------------------------------------------
-
+    // Find the "Ship To" label, then read the lines under it.
     const stLabel = pdf.first('Ship To', 'Shipping To');
     if (!stLabel) throw err.because('Could not find Ship To Label');
 
-    const shipping_address = pdf.getBelow(stLabel, 4, 2);
-    if (shipping_address.length !== 4) throw err.because('Ship To Address incomplete');
+    const shippingAddress = pdf.getBelow(stLabel, 4, 2);
+    if (shippingAddress.length !== 4) throw err.because('Ship To Address incomplete');
 
     // ---------------------------------------------------------------
     // Shipping Method
     // ---------------------------------------------------------------
-
+    // Find "Shipping Method" and read the value underneath it.
     const shipViaLabel = pdf.first('Shipping Method', 'Shipment Method');
     if (!shipViaLabel) throw err.because('Could not find Ship Via Label');
 
-    const [shipping_method] = pdf.getBelow(shipViaLabel, 1, 2);
-    if (!shipping_method) throw err.because('Could not find Ship Via');
+    const [shippingMethodRaw] = pdf.getBelow(shipViaLabel, 1, 2);
+    if (!shippingMethodRaw) throw err.because('Could not find Ship Via');
+
+    const shippingMethod = (shippingMethodRaw ?? '').trim() || undefined;
 
     // ---------------------------------------------------------------
     // Freight
     // ---------------------------------------------------------------
-
+    // Freight (shipping cost) is printed to the RIGHT of "Shipping Cost".
     const freightLabel = pdf.first('Shipping Cost');
-    let freight = '';
+    let freightRaw = '';
     if (freightLabel) {
-      freight = pdf.getRight(freightLabel, 1, 1)[0] || '';
+      freightRaw = pdf.getRight(freightLabel, 1, 1)[0] || '';
     }
+
+    // Money is stored as a string like "123.45" (no $ or commas).
+    const freight = freightRaw || undefined;
 
     // ---------------------------------------------------------------
     // Subtotal / Total
     // ---------------------------------------------------------------
-
+    // Find "Subtotal" and "Total", then read the values on the right.
     const subtotalLabel = pdf.first('Subtotal');
     if (!subtotalLabel) throw err.because('Could not find Order Subtotal Label');
 
-    const [subtotal] = pdf.getRight(subtotalLabel, 1, 3);
-    if (!subtotal) throw err.because('Could not find Order Subtotal');
+    const [subtotalRaw] = pdf.getRight(subtotalLabel, 1, 3);
+    if (!subtotalRaw) throw err.because('Could not find Order Subtotal');
+
+    const subtotal = subtotalRaw;
+    if (!subtotal) throw err.because('Could not parse Order Subtotal');
 
     const totalLabel = pdf.first('Total');
     if (!totalLabel) throw err.because('Could not find Order Total Label');
 
-    const [total] = pdf.getRight(totalLabel, 1, 3);
-    if (!total) throw err.because('Could not find Order Total');
+    const [totalRaw] = pdf.getRight(totalLabel, 1, 3);
+    if (!totalRaw) throw err.because('Could not find Order Total');
+
+    const total = totalRaw;
+    if (!total) throw err.because('Could not parse Order Total');
 
     // ---------------------------------------------------------------
-    // PO Number (fix: value is often on SAME LINE as label)
+    // PO Number
     // ---------------------------------------------------------------
-
+    // PO# is sometimes on the SAME line as the label (not underneath),
+    // so we try to grab it from that same line first.
     const poNumberLabel =
       pdf.first('PO#:', 'PO#', 'P.O. Number', 'PO Number') ||
       undefined;
 
     if (!poNumberLabel) throw err.because('Could not find PO Number Label');
 
-    /**
-     * Coder’s note:
-     * Some label hits end up “wide” (label search may include extra tokens),
-     * which can make getRight() return nothing because it starts AFTER anchor.right.
-     *
-     * So we read PO using a strict same-line scan FIRST, then fall back to model helpers.
-     */
-    const po_number = this.extractValueForLabelSameLine(pdf, poNumberLabel, (t) => /^PO#?:?$/i.test(t) || /^PO#:/i.test(t) || /^PO#/i.test(t))
-      || this.firstNonEmpty([
+    const poNumber =
+      this.extractValueForLabelSameLine(
+        pdf,
+        poNumberLabel,
+        (t) => /^PO#?:?$/i.test(t) || /^PO#:/i.test(t) || /^PO#/i.test(t)
+      ) ||
+      this.firstNonEmpty([
         (pdf.getRight(poNumberLabel, 1, 2)[0] || '').trim(),
         (pdf.getBelow(poNumberLabel, 1, 2)[0] || '').trim(),
       ]);
 
-    if (!po_number) throw err.because('Could not find PO Number');
+    if (!poNumber) throw err.because('Could not find PO Number');
 
     // ---------------------------------------------------------------
     // Line Items Table
     // ---------------------------------------------------------------
-
-    /**
-     * IMPORTANT:
-     * Header is commonly fragmented like: "B/O" + "ETA" + "1"
-     * so searching only "B/O ETA" can miss depending on search/token join.
-     *
-     * Strategy:
-     *  1) Try label search hits ("B/O ETA 1" then "B/O ETA")
-     *  2) If none, fall back to a heuristic header-line scan
-     */
+    // The items list is a "table", but in a PDF it can be broken up into many little text pieces.
+    // So we first find where the table header is, then read row-by-row beneath it.
     const tblStartLabels = this.uniqueAnchors([
       ...pdf.all('B/O ETA 1'),
       ...pdf.all('B/O ETA'),
     ]);
 
+    // If label search misses (because the header is fragmented),
+    // do a best-guess scan looking for a header line containing common column words.
     const headerAnchors = tblStartLabels.length > 0
       ? tblStartLabels
       : this.findTsgTableHeaderAnchors(pdf);
 
     if (headerAnchors.length === 0) throw err.because('Could not find Line Items Table header');
 
+    // PdfTable tells the parser how to stitch text into columns and rows.
     const table = new PdfTable({
       geometry: {
         lineTolerance: 2,
@@ -154,6 +153,8 @@ export class TsgPdfExtractorService {
         minFilledCells: 2,
         blankLineLimit: 8,
       },
+      // Different PDFs may label the same column in slightly different ways.
+      // This maps variations into consistent column names.
       columnNamer: (col: string) => {
         const c = (col ?? '').replace(/\s+/g, ' ').trim();
 
@@ -172,47 +173,60 @@ export class TsgPdfExtractorService {
       },
     });
 
+    // Run table extraction starting at each possible header location we found.
     for (const anchor of headerAnchors) {
       pdf.getTable(anchor as any, table);
     }
 
+    // Raw rows are just key/value text (strings).
     const rawTableRows: Record<string, string>[] = table.toArray();
 
-    const items: TsgConfirmationItemModel[] = rawTableRows
-      .map((row: Record<string, string>) => ({
-        item: this.clean(row['Item']) ?? null,
-        qty: this.clean(row['Qty']) ?? null,
-        description: this.clean(row['Description']) ?? null,
-        each: this.parseDollars(row['Each'] ?? ''),
-        total: this.parseDollars(row['Amount'] ?? ''),
-        additional_details: this.clean(row['Remark']) ?? null,
-        backorder: this.clean(row['BO']) ?? null,
-      }))
-      .filter((it) => !!it.item || !!it.description || (it.total !== null && it.total !== 0));
+    // Convert the raw table rows into our clean UI model.
+    const items: ExtractedOrderItem[] = rawTableRows
+      .map((row: Record<string, string>) => {
+        const item = this.clean(row['Item']) || '';
+        const qty = this.clean(row['Qty']) || undefined;
+        const description = this.clean(row['Description']) || '';
+
+        // Money gets normalized to "1234.56"
+        const each = row['Each'] ?? '';
+        const lineTotal = row['Amount'] ?? '';
+
+        const additionalDetails = this.clean(row['Remark']) || undefined;
+        const backorder = this.clean(row['BO']) || undefined;
+
+        return {
+          item,
+          qty,
+          each,
+          total: lineTotal,
+          description,
+          additionalDetails,
+          backorder,
+        };
+      })
+      // Keep rows that look meaningful (some PDFs include blank or spacer rows).
+      .filter((it) => {
+        const hasIdentity = !!(it.item || it.description);
+        const hasMoney = !!(it.each || it.total);
+        return hasIdentity || hasMoney;
+      });
 
     // ---------------------------------------------------------------
-    // Output (include debug table block for console validation)
+    // Output
     // ---------------------------------------------------------------
-
+    // Return the final extracted order for downstream use.
     return {
-      po_number: po_number,
-      shipping_method: (shipping_method ?? '').trim() || null,
-      shipping_address: shipping_address,
+      poNumber: poNumber,
+      shippingMethod: shippingMethod,
+      shippingAddress: shippingAddress,
 
-      freight: this.parseDollars(freight),
-      subtotal: this.parseDollars(subtotal),
-      total: this.parseDollars(total),
+      freight: freight,
+      subtotal: subtotal,
+      total: total,
 
-      items: items as any,
-
-      extracted_table: {
-        anchorStrategy: tblStartLabels.length > 0 ? 'labelSearch' : 'heuristicLineScan',
-        anchorCount: headerAnchors.length,
-        columns: [...(table.columns ?? [])],
-        rowCount: rawTableRows.length,
-        rows: rawTableRows,
-      },
-    } as any as Partial<ConfirmationOrder>;
+      orderItems: items,
+    };
   }
 
   // -----------------------------------------------------------------
@@ -220,8 +234,8 @@ export class TsgPdfExtractorService {
   // -----------------------------------------------------------------
 
   /**
-   * Extract a value that lives on the SAME LINE as the label token.
-   * Used for PO# where value frequently appears to the right on the same line.
+   * Sometimes the value we need is on the SAME line as the label.
+   * This reads that line and grabs the next token(s) after the label.
    */
   private extractValueForLabelSameLine(
     pdf: PdfTextBehaviorialModel,
@@ -264,8 +278,9 @@ export class TsgPdfExtractorService {
   }
 
   /**
-   * Heuristic: find the header line by scanning for multiple known header words.
-   * Returns "anchor-like" objects compatible with pdf.getTable(anchor, table).
+   * If we can’t find the table header by searching labels,
+   * scan the page line-by-line and look for a line that contains
+   * the key header words (Qty, Item, Description, Amount, etc.).
    */
   private findTsgTableHeaderAnchors(pdf: PdfTextBehaviorialModel): any[] {
     const anchors: any[] = [];
@@ -321,6 +336,10 @@ export class TsgPdfExtractorService {
     return this.uniqueAnchors(anchors);
   }
 
+  /**
+   * Sometimes our search finds the "same" header more than once.
+   * This removes duplicates so we don’t parse the table multiple times.
+   */
   private uniqueAnchors(hits: any[]): any[] {
     const seen = new Set<string>();
     const out: any[] = [];
@@ -338,6 +357,9 @@ export class TsgPdfExtractorService {
     return out;
   }
 
+  /**
+   * Given multiple possible candidates, return the first one that is not empty.
+   */
   private firstNonEmpty(values: string[]): string {
     for (const v of values ?? []) {
       const s = (v ?? '').toString().trim();
@@ -346,38 +368,12 @@ export class TsgPdfExtractorService {
     return '';
   }
 
+  /**
+   * PDFs often include weird spacing. This collapses multiple spaces and trims.
+   * Returns null if it ends up empty.
+   */
   private clean(v: string | undefined | null): string | null {
     const s = (v ?? '').toString().replace(/\s+/g, ' ').trim();
     return s.length ? s : null;
-  }
-
-  // -----------------------------------------------------------------
-  // Money parsing (lightweight)
-  // -----------------------------------------------------------------
-
-  /**
-   * Convert "$1,234.56" (or "1,234.56") into a number.
-   *
-   * PDFs often include dollar signs and commas. We strip those out safely.
-   *
-   * Coder’s note:
-   * If you want money parsing as a pipeline normalizer later, move this into a normalizer service.
-   */
-  private parseDollars(input: string): number | null {
-    const raw = (input ?? '').toString().trim();
-    if (!raw) return null;
-
-    const isNegative = raw.startsWith('(') && raw.endsWith(')');
-
-    const cleaned = raw
-      .replace(/\$/g, '')
-      .replace(/,/g, '')
-      .replace(/[()]/g, '')
-      .trim();
-
-    const value = Number.parseFloat(cleaned);
-    if (Number.isNaN(value)) return null;
-
-    return isNegative ? -value : value;
   }
 }

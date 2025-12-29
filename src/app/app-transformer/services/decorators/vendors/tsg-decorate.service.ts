@@ -10,14 +10,14 @@
 
 import { Injectable } from '@angular/core';
 import { DecoratorBaseService } from '../decorator-base.service';
-import { TransformationRequest } from '../../../models/transform.models';
+import {ExtractedOrder} from "@app/app-transformer/services/extractors/models/extract.model";
 
 @Injectable({
   providedIn: 'root'
 })
 export class TsgDecorateService extends DecoratorBaseService {
 
-  public override decorate(input: unknown, request: TransformationRequest): unknown {
+  public override decorate(input: ExtractedOrder): ExtractedOrder {
     // TODO: decorate with convenience fields / flags / normalized metadata.
     return input;
   }

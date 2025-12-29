@@ -4,7 +4,7 @@
  * @Date:        2025-12-17
  *
  * @Description:
- *   Geometry helpers for working with PDF text items that have X/Y coordinates.
+ *   Geometry helpers for working with PDF text orderItems that have X/Y coordinates.
  *
  *   A PDF does not store “lines” like Word does.
  *   It stores lots of tiny text fragments placed at X/Y coordinates.
@@ -45,7 +45,7 @@ export class PdfGeometry {
   /**
    * Group individual PDF text fragments into "visual lines".
    *
-   * @param items All extracted text items for a page
+   * @param items All extracted text orderItems for a page
    * @param yTolerance How close Y values must be to be considered the same line
    */
   public static buildLines(items: PdfTextItemModel[], yTolerance = 2): PdfTextLineModel[] {
@@ -72,7 +72,7 @@ export class PdfGeometry {
       line.y = PdfGeometry.averageY(line.items);
     }
 
-    // Ensure each line's items are left-to-right.
+    // Ensure each line's orderItems are left-to-right.
     for (const line of lines) {
       line.items.sort((a: PdfTextItemModel, b: PdfTextItemModel) => a.x - b.x);
     }

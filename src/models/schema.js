@@ -906,7 +906,7 @@ export const schema = {
                 {
                     "type": "key",
                     "properties": {
-                        "name": "gsi-SalesOrder.items",
+                        "name": "gsi-SalesOrder.orderItems",
                         "fields": [
                             "salesOrderItemsId"
                         ]
@@ -1216,7 +1216,7 @@ export const schema = {
                 {
                     "type": "key",
                     "properties": {
-                        "name": "gsi-PurchaseOrder.items",
+                        "name": "gsi-PurchaseOrder.orderItems",
                         "fields": [
                             "purchaseOrderItemsId"
                         ]
@@ -1529,7 +1529,7 @@ export const schema = {
                 {
                     "type": "key",
                     "properties": {
-                        "name": "gsi-ConfirmationOrder.items",
+                        "name": "gsi-ConfirmationOrder.orderItems",
                         "fields": [
                             "confirmationOrderItemsId"
                         ]

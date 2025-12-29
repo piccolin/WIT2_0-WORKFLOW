@@ -32,7 +32,7 @@ export class PdfTextSearch {
       const lines = PdfGeometry.buildLines(page.items);
 
       for (const line of lines) {
-        // Work with tokens (text items) on this line.
+        // Work with tokens (text orderItems) on this line.
         const tokens = line.items
           .map(i => ({ item: i, key: this.toSearchKey(i.text) }))
           .filter(t => !!t.key);

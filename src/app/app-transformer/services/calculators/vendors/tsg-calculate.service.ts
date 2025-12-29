@@ -9,14 +9,14 @@
 
 import { Injectable } from '@angular/core';
 import { CalculatorBaseService } from '../calculator-base.service';
-import { TransformationRequest } from '../../../models/transform.models';
+import {ExtractedOrder} from "@app/app-transformer/services/extractors/models/extract.model";
 
 @Injectable({
   providedIn: 'root'
 })
 export class TsgCalculateService extends CalculatorBaseService {
 
-  public override calculate(input: unknown, request: TransformationRequest): unknown {
+  public override calculate(input: ExtractedOrder): ExtractedOrder {
     // TODO: compute totals/subtotals/etc.
     return input;
   }
