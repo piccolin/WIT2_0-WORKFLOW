@@ -1,6 +1,8 @@
 import { Injectable } from '@angular/core';
 import { TsgTransformerService } from './vendors/tsg-transformer.service';
 import { TransformationRequest, Vendors } from '../../models/transform.models';
+import {CubitacPdfExtractorService} from "@app/app-transformer/services/extractors/vendors/cubitac/cubitac-pdf-extractor.service";
+import {CubitacTransformerService} from "@app/app-transformer/services/transformers/vendors/cubitac-transformer.service";
 
 /**
  * @Filename:    transformer-selector.service.ts
@@ -37,7 +39,8 @@ export class TransformerSelectorService {
   // DI
   // -----------------------------------------------------------------
   constructor(
-    private tsgPipeline: TsgTransformerService
+    private   tsgPipeline: TsgTransformerService,
+    private   cubitacPipeline: CubitacTransformerService
   ) {}
 
   // -----------------------------------------------------------------
@@ -51,6 +54,9 @@ export class TransformerSelectorService {
     switch (vendor) {
       case Vendors.Tsg:
         return this.tsgPipeline;
+
+      case Vendors.Cubitac:
+        return this.cubitacPipeline;
 
       default:
         throw new Error(`No canonicalization pipeline registered for vendor: ${vendor}`);

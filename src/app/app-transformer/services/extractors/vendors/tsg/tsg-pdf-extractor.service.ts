@@ -1,5 +1,5 @@
 /**
- * @Filename:    tsg-pdf-extractor.service.ts
+ * @Filename:    cubitac-pdf-extractor.service.ts
  * @Type:        Service
  * @Date:        2025-12-29
  *

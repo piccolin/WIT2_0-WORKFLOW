@@ -1,11 +1,11 @@
 /**
- * @Filename:    tsg-transformer.service.ts
+ * @Filename:    cubitac-transformer.service.ts
  * @Type:        Service
  * @Date:        2025-12-17
  * @Author:      Guido A. Piccolino Jr.
  *
  * @Description:
- *   TSG-specific canonicalization pipeline.
+ *   Cubitac-specific canonicalization pipeline.
  *   Orchestrates the end-to-end flow:
  *     1) Parse vendor file content into a standard intermediate shape
  *     2) Normalize values/fields into consistent formats
@@ -20,7 +20,7 @@
  *
  * @Services Used:
  *   - TsgParseService:
- *     1) Converts TSG file into a predictable intermediate structure
+ *     1) Converts Cubitac file into a predictable intermediate structure
  *   - TsgNormalizeService:
  *     1) Cleans and normalizes parsed values
  *   - TsgDefaultValueService:
@@ -42,36 +42,36 @@
  */
 import {Injectable} from '@angular/core';
 import {SalesOrderMapResult, TransformationRequest, Vendors} from '../../../models/transform.models';
-import {TsgParseService} from '@app/app-transformer/services/parsers/vendors/tsg-parse.service';
-import {TsgNormalizeService} from '@app/app-transformer/services/normalizers/vendors/tsg-normalize.service';
-import {TsgDefaultValueService} from '@app/app-transformer/services/defaulters/vendors/tsg-default-value.service';
-import {TsgCalculateService} from '@app/app-transformer/services/calculators/vendors/tsg-calculate.service';
-import {TsgDecorateService} from '@app/app-transformer/services/decorators/vendors/tsg-decorate.service';
-import {TsgMapToModelService} from '@app/app-transformer/services/mappers/vendors/tsg-map-to-model.service';
 import {IntegrationPayloadGraphqlService} from "@app/app-data/services/stores/graphql/integration-payload-graphql.service";
 import {PdfTextModelJsonUtilService} from "@app/app-parse/pdf-parser/utils/pdf-text-model-to-json.util";
-import {TsgPdfExtractorService} from "@app/app-transformer/services/extractors/vendors/tsg/tsg-pdf-extractor.service";
+import {CubitacPdfExtractorService} from "@app/app-transformer/services/extractors/vendors/cubitac/cubitac-pdf-extractor.service";
 import {PdfTextBehaviorialModel} from "@app/app-parse/pdf-parser/models/pdf-text-behaviorial.model";
 import {ExtractedOrder} from "@app/app-transformer/services/extractors/models/extract.model";
 import {SalesOrder} from "@scr/API";
 import {TransformerDataService} from "@app/app-transformer/services/data/transformer-data.service";
+import {CubitacNormalizeService} from "@app/app-transformer/services/normalizers/vendors/cubitac-normalize.service";
+import {CubitacDefaultValueService} from "@app/app-transformer/services/defaulters/vendors/cubitac-default-value.service";
+import {CubitacCalculateService} from "@app/app-transformer/services/calculators/vendors/cubitac-calculate.service";
+import {CubitacDecorateService} from "@app/app-transformer/services/decorators/vendors/cubitac-decorate.service";
+import {CubitacParseService} from "@app/app-transformer/services/parsers/vendors/cubitac-parse.service";
+import {CubitacMapToModelService} from "@app/app-transformer/services/mappers/cubitac-map-to-model.service";
 
 @Injectable({ providedIn: 'root' })
-export class TsgTransformerService {
+export class CubitacTransformerService {
 
   // -----------------------------------------------------------------
   // DI
   // -----------------------------------------------------------------
   constructor(
-    private parseService: TsgParseService,
+    private parseService: CubitacParseService,
     private integrationPayloadGraphqlService: IntegrationPayloadGraphqlService,
     private pdfTextModelJsonUtilService:PdfTextModelJsonUtilService,
-    private tsgPdfExtractorService: TsgPdfExtractorService,
-    private normalizeService: TsgNormalizeService,
-    private defaultValueService: TsgDefaultValueService,
-    private calculateService: TsgCalculateService,
-    private decorateService: TsgDecorateService,
-    private mapToModelService: TsgMapToModelService,
+    private cubitacPdfExtractorService: CubitacPdfExtractorService,
+    private normalizeService: CubitacNormalizeService,
+    private defaultValueService: CubitacDefaultValueService,
+    private calculateService: CubitacCalculateService,
+    private decorateService: CubitacDecorateService,
+    private mapToModelService: CubitacMapToModelService,
     private transformerDataService: TransformerDataService
   ) {}
 
@@ -80,7 +80,7 @@ export class TsgTransformerService {
   // -----------------------------------------------------------------
 
   /**
-   * Runs the TSG canonicalization pipeline and returns a canonical partial model.
+   * Runs the Cubitac canonicalization pipeline and returns a canonical partial model.
    */
   public async transform(request: TransformationRequest): Promise<void> {
 
@@ -89,7 +89,7 @@ export class TsgTransformerService {
     console.log("parsedPdf: \n%o", parsedPdf);
 
     // 2) Extract to temporary model
-    const extractedOrder: ExtractedOrder =  this.tsgPdfExtractorService.extract(parsedPdf as PdfTextBehaviorialModel);
+    const extractedOrder: ExtractedOrder =  this.cubitacPdfExtractorService.extract(parsedPdf as PdfTextBehaviorialModel);
     console.log("extractedOrder: \n%o", extractedOrder)
 
     // 3) Store Input Model

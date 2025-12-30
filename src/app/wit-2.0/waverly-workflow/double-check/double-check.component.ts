@@ -29,7 +29,7 @@ export class DoubleCheckComponent {
   async onUploadCompleted(fileUploadPayloadEvent:FileUploadPayloadEvent){
     let transformationRequest: TransformationRequest = {
       fileType:   FileType.Pdf,
-      vendor:     Vendors.Tsg,
+      vendor:     Vendors.Cubitac,
       orderType:  OrderType.Confirmation,
       file:       fileUploadPayloadEvent.file,
       rawText:    undefined
