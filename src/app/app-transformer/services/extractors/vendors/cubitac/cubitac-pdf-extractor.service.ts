@@ -59,10 +59,20 @@ export class CubitacPdfExtractorService {
     // ---------------------------------------------------------------
     // Shipping Method
     // ---------------------------------------------------------------
-    const shipViaLabel = pdf.first('Ship Via');
+    const shipViaLabel = pdf.first('Ship Via', 'SHIP VIA');
     if (!shipViaLabel) throw err.because('Could not find Ship Via Label');
 
-    const [shippingMethodRaw] = pdf.getBelow(shipViaLabel, 1, 25);
+    // NOTE:
+    // Cubitac header/value cells are center-justified.
+    // getBelow() uses a rightward window and can accidentally grab the NEXT column (Salesperson).
+    // So we extract Ship Via by the center of its column between PO and SALESPERSON.
+    const poHeaderForBounds = pdf.first('PO');
+    const salesPersonHeaderForBounds = pdf.first('SALESPERSON', 'Salesperson');
+
+    const shippingMethodRaw =
+      this.extractCenteredColumnValueBelow(pdf, shipViaLabel, poHeaderForBounds, salesPersonHeaderForBounds) ||
+      (pdf.getBelow(shipViaLabel, 1, 25)[0] || '');
+
     if (!shippingMethodRaw) throw err.because('Could not find Ship Via');
 
     const shippingMethod = this.clean(shippingMethodRaw) || undefined;
@@ -100,17 +110,12 @@ export class CubitacPdfExtractorService {
     const poNumberLabel = pdf.first('PO');
     if (!poNumberLabel) throw err.because('Could not find PO Number Label');
 
-    const poNumber =
-      this.firstNonEmpty([
-        this.extractValueForLabelSameLine(
-          pdf,
-          poNumberLabel,
-          (t) => /^PO$/i.test(t) || /^P\.?O\.?$/i.test(t),
-          1
-        ),
-        (pdf.getRight(poNumberLabel, 1, 1)[0] || '').trim(),
-        (pdf.getBelow(poNumberLabel, 1, 25)[0] || '').trim(),
-      ]);
+    // NOTE:
+    // PO is printed UNDER the "PO" header, and it's the LEFTMOST value on that value line.
+    // Because the values are center-justified, getBelow() can miss the PO token and pick the next column.
+    // So we read the full line directly below the header and take the first token.
+    const poValueLine = this.getFullLineTextBelow(pdf, poNumberLabel);
+    const poNumber = this.firstToken(poValueLine);
 
     if (!poNumber) throw err.because('Could not find PO Number');
 
@@ -157,7 +162,17 @@ export class CubitacPdfExtractorService {
     const items: ExtractedOrderItem[] = rawRows
       .map((row: Record<string, string>) => {
         const item = this.clean(this.cell(row, ['ITEM'])) || '';
-        const qty = this.clean(this.cell(row, ['QTY', 'QTY 1', 'QTY 2'])) || undefined;
+
+        // -----------------------------------------------------------
+        // Qty Fix
+        // -----------------------------------------------------------
+        // Cubitac includes an unlabeled row-number column BEFORE QTY.
+        // Table parsing can fold that row-number into the QTY cell.
+        // Example:
+        //   QTY = "2 1"   (row-number 2, real qty 1)
+        // We "skip" the unlabeled column by taking the LAST integer in QTY.
+        const qtyRaw = this.clean(this.cell(row, ['QTY'])) || undefined;
+        const qty = this.extractQtySkippingIndex(qtyRaw) || undefined;
 
         const description = this.clean(this.cell(row, ['DESCRIPTION'])) || '';
 
@@ -181,9 +196,9 @@ export class CubitacPdfExtractorService {
         } as any as ExtractedOrderItem;
       })
       .filter((it: any) => {
-        const hasIdentity = !!(it?.item || it?.description);
-        const hasMoney = !!(it?.each || it?.total);
-        return hasIdentity || hasMoney;
+        const hasItem = !!(it?.item ?? '').toString().trim();
+        const hasQty = !!(it?.qty ?? '').toString().trim();
+        return hasItem && hasQty;
       });
 
     // ---------------------------------------------------------------
@@ -307,5 +322,126 @@ export class CubitacPdfExtractorService {
       if (typeof v === 'string' && v.trim().length) return v;
     }
     return '';
+  }
+
+  /**
+   * Read the full text line directly BELOW the provided header/label.
+   * This ignores column windows so it works with center-justified values.
+   */
+  private getFullLineTextBelow(pdf: PdfTextBehaviorialModel, anchor: any): string {
+    const page = pdf.getPage(anchor?.pageNumber);
+    if (!page) return '';
+
+    const lineTolerance = 2;
+    const lines = PdfGeometry.buildLines(page.items, lineTolerance);
+
+    const anchorItem = anchor?.items?.[0];
+    if (!anchorItem) return '';
+
+    const anchorLineIndex = PdfGeometry.findLineIndexForItem(lines, anchorItem, lineTolerance);
+    if (anchorLineIndex < 0) return '';
+
+    const nextLine = lines[anchorLineIndex + 1];
+    if (!nextLine?.items?.length) return '';
+
+    return nextLine.items
+      .slice()
+      .sort((a: any, b: any) => (a?.x ?? 0) - (b?.x ?? 0))
+      .map((it: any) => String(it?.text ?? '').trim())
+      .filter(Boolean)
+      .join(' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  /**
+   * Extract the value centered under a column header on the line below.
+   * Uses left/right neighbor headers to avoid bleeding into the next column.
+   */
+  private extractCenteredColumnValueBelow(
+    pdf: PdfTextBehaviorialModel,
+    header: any,
+    leftNeighbor?: any,
+    rightNeighbor?: any
+  ): string {
+    const page = pdf.getPage(header?.pageNumber);
+    if (!page) return '';
+
+    const lineTolerance = 2;
+    const lines = PdfGeometry.buildLines(page.items, lineTolerance);
+
+    const headerItem = header?.items?.[0];
+    if (!headerItem) return '';
+
+    const headerLineIndex = PdfGeometry.findLineIndexForItem(lines, headerItem, lineTolerance);
+    if (headerLineIndex < 0) return '';
+
+    const valueLine = lines[headerLineIndex + 1];
+    if (!valueLine?.items?.length) return '';
+
+    const headerCenter = this.centerX(header);
+    const leftCenter = leftNeighbor ? this.centerX(leftNeighbor) : null;
+    const rightCenter = rightNeighbor ? this.centerX(rightNeighbor) : null;
+
+    const xMin = leftCenter !== null ? ((leftCenter + headerCenter) / 2) : (headerCenter - 160);
+    const xMax = rightCenter !== null ? ((headerCenter + rightCenter) / 2) : (headerCenter + 160);
+
+    const tokens = valueLine.items
+      .slice()
+      .sort((a: any, b: any) => (a?.x ?? 0) - (b?.x ?? 0))
+      .filter((it: any) => {
+        const t = String(it?.text ?? '').trim();
+        if (!t) return false;
+
+        const c = this.itemCenterX(it);
+        return c >= xMin && c <= xMax;
+      })
+      .map((it: any) => String(it?.text ?? '').trim())
+      .filter(Boolean);
+
+    return tokens.join(' ').replace(/\s+/g, ' ').trim();
+  }
+
+  /**
+   * Skip the unlabeled row-number column that gets folded into QTY.
+   * If QTY looks like "2 1" (rowIndex + qty), return "1".
+   */
+  private extractQtySkippingIndex(qtyRaw: string | undefined | null): string {
+    const s = (qtyRaw ?? '').toString().replace(/\s+/g, ' ').trim();
+    if (!s) return '';
+
+    const parts = s.split(' ').filter(Boolean);
+
+    // If it's exactly two integers, treat it as: [rowIndex] [qty]
+    if (parts.length === 2 && /^\d+$/.test(parts[0]) && /^\d+$/.test(parts[1])) {
+      return parts[1];
+    }
+
+    // If it starts with an integer and ends with an integer, keep the last integer.
+    // (Some PDFs may include extra spacing or fragments.)
+    const numericParts = parts.filter(p => /^\d+$/.test(p));
+    if (numericParts.length >= 2) {
+      return numericParts[numericParts.length - 1];
+    }
+
+    return s;
+  }
+
+  private firstToken(line: string): string {
+    const s = (line ?? '').toString().trim();
+    if (!s) return '';
+    return (s.split(/\s+/)[0] || '').trim();
+  }
+
+  private centerX(label: any): number {
+    const x1 = Number(label?.x ?? 0);
+    const x2 = Number(label?.right ?? x1);
+    return (x1 + x2) / 2;
+  }
+
+  private itemCenterX(it: any): number {
+    const x = Number(it?.x ?? 0);
+    const w = Number(it?.width ?? 0);
+    return x + (w / 2);
   }
 }

@@ -1,0 +1,3 @@
+1) End to end transformation for Cubitac - Beta
+2) Updated cubitac-pdf-extractor.ts
+NOTE: Data services need to be introduced for next commit
