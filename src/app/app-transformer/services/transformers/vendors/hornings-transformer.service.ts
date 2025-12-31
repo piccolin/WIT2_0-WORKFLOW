@@ -1,11 +1,11 @@
 /**
- * @Filename:    cubitac-transformer.service.ts
+ * @Filename:    hornings-transformer.service.ts
  * @Type:        Service
  * @Date:        2025-12-17
  * @Author:      Guido A. Piccolino Jr.
  *
  * @Description:
- *   Cubitac-specific canonicalization pipeline.
+ *   hornings-specific canonicalization pipeline.
  *   Orchestrates the end-to-end flow:
  *     1) Parse vendor file content into a standard intermediate shape
  *     2) Normalize values/fields into consistent formats
@@ -20,16 +20,16 @@
  *
  * @Services Used:
  *   - TsgParseService:
- *     1) Converts Cubitac file into a predictable intermediate structure
- *   - TsgNormalizeService:
+ *     1) Converts Hornings file into a predictable intermediate structure
+ *   - HorningsNormalizeService:
  *     1) Cleans and normalizes parsed values
- *   - TsgDefaultValueService:
+ *   - HorningsDefaultValueService:
  *     1) Adds required defaults when values are missing
- *   - TsgCalculateService:
+ *   - HorningsCalculateService:
  *     1) Computes derived/calculated fields
- *   - TsgDecorateService:
+ *   - HorningsDecorateService:
  *     1) Adds optional enrichment / metadata
- *   - TsgMapToModelService:
+ *   - HorningsMapToModelService:
  *     1) Maps the processed data to our canonical schema shape
  *
  * @TODOs:
@@ -44,34 +44,38 @@ import {Injectable} from '@angular/core';
 import {SalesOrderMapResult, TransformationRequest, Vendors} from '../../../models/transform.models';
 import {IntegrationPayloadGraphqlService} from "@app/app-data/services/stores/graphql/integration-payload-graphql.service";
 import {PdfTextModelJsonUtilService} from "@app/app-parse/pdf-parser/utils/pdf-text-model-to-json.util";
-import {CubitacPdfExtractorService} from "@app/app-transformer/services/extractors/vendors/cubitac/cubitac-pdf-extractor.service";
 import {PdfTextBehaviorialModel} from "@app/app-parse/pdf-parser/models/pdf-text-behaviorial.model";
 import {ExtractedOrder} from "@app/app-transformer/services/extractors/models/extract.model";
 import {SalesOrder} from "@scr/API";
 import {TransformerDataService} from "@app/app-transformer/services/data/transformer-data.service";
-import {CubitacNormalizeService} from "@app/app-transformer/services/normalizers/vendors/cubitac-normalize.service";
-import {CubitacDefaultValueService} from "@app/app-transformer/services/defaulters/vendors/cubitac-default-value.service";
-import {CubitacCalculateService} from "@app/app-transformer/services/calculators/vendors/cubitac-calculate.service";
-import {CubitacDecorateService} from "@app/app-transformer/services/decorators/vendors/cubitac-decorate.service";
-import {CubitacParseService} from "@app/app-transformer/services/parsers/vendors/cubitac-parse.service";
-import {CubitacMapToModelService} from "@app/app-transformer/services/mappers/vendors/cubitac-map-to-model.service";
+import {HorningsParseService} from "@app/app-transformer/services/parsers/vendors/hornings-parse.service";
+import {
+  HorningsPdfExtractorService
+} from "@app/app-transformer/services/extractors/vendors/hornings/hornings-pdf-extractor.service";
+import {HorningsNormalizeService} from "@app/app-transformer/services/normalizers/vendors/hornings-normalize.service";
+import {
+  HorningsDefaultValueService
+} from "@app/app-transformer/services/defaulters/vendors/hornings-default-value.service";
+import {HorningsCalculateService} from "@app/app-transformer/services/calculators/vendors/hornings-calculate.service";
+import {HorningsDecorateService} from "@app/app-transformer/services/decorators/vendors/hornings-decorate.service";
+import {HorningsMapToModelService} from "@app/app-transformer/services/mappers/vendors/hornings-map-to-model.service";
 
 @Injectable({ providedIn: 'root' })
-export class CubitacTransformerService {
+export class HorningsTransformerService {
 
   // -----------------------------------------------------------------
   // DI
   // -----------------------------------------------------------------
   constructor(
-    private parseService: CubitacParseService,
+    private parseService: HorningsParseService,
     private integrationPayloadGraphqlService: IntegrationPayloadGraphqlService,
     private pdfTextModelJsonUtilService:PdfTextModelJsonUtilService,
-    private cubitacPdfExtractorService: CubitacPdfExtractorService,
-    private normalizeService: CubitacNormalizeService,
-    private defaultValueService: CubitacDefaultValueService,
-    private calculateService: CubitacCalculateService,
-    private decorateService: CubitacDecorateService,
-    private mapToModelService: CubitacMapToModelService,
+    private horningsPdfExtractorService: HorningsPdfExtractorService,
+    private normalizeService: HorningsNormalizeService,
+    private defaultValueService: HorningsDefaultValueService,
+    private calculateService: HorningsCalculateService,
+    private decorateService: HorningsDecorateService,
+    private mapToModelService: HorningsMapToModelService,
     private transformerDataService: TransformerDataService
   ) {}
 
@@ -89,7 +93,7 @@ export class CubitacTransformerService {
     console.log("parsedPdf: \n%o", parsedPdf);
 
     // 2) Extract to temporary model
-    const extractedOrder: ExtractedOrder =  this.cubitacPdfExtractorService.extract(parsedPdf as PdfTextBehaviorialModel);
+    const extractedOrder: ExtractedOrder =  this.horningsPdfExtractorService.extract(parsedPdf as PdfTextBehaviorialModel);
     console.log("extractedOrder: \n%o", extractedOrder)
 
     // 3) Store Input Model

@@ -3,6 +3,10 @@ import { TsgTransformerService } from './vendors/tsg-transformer.service';
 import { TransformationRequest, Vendors } from '../../models/transform.models';
 import {CubitacPdfExtractorService} from "@app/app-transformer/services/extractors/vendors/cubitac/cubitac-pdf-extractor.service";
 import {CubitacTransformerService} from "@app/app-transformer/services/transformers/vendors/cubitac-transformer.service";
+import {
+  HorningsTransformerService
+} from "@app/app-transformer/services/transformers/vendors/hornings-transformer.service";
+
 
 /**
  * @Filename:    transformer-selector.service.ts
@@ -40,7 +44,8 @@ export class TransformerSelectorService {
   // -----------------------------------------------------------------
   constructor(
     private   tsgPipeline: TsgTransformerService,
-    private   cubitacPipeline: CubitacTransformerService
+    private   cubitacPipeline: CubitacTransformerService,
+    private   horningsPipeline: HorningsTransformerService
   ) {}
 
   // -----------------------------------------------------------------
@@ -57,6 +62,10 @@ export class TransformerSelectorService {
 
       case Vendors.Cubitac:
         return this.cubitacPipeline;
+
+      case Vendors.HorningsSupply:
+        return this.horningsPipeline;
+
 
       default:
         throw new Error(`No canonicalization pipeline registered for vendor: ${vendor}`);
