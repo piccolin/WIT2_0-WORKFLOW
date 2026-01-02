@@ -23,6 +23,8 @@
     "papaparse": "^5.5.3",
     "pdfjs-dist": "^5.4.449",
     "rxjs": "~7.8.0",
+    "string-collapse-white-space": "^11.1.0",
+    "string-strip-html": "^13.5.0",
     "tslib": "^2.3.0",
     "zone.js": "~0.14.10"
   },

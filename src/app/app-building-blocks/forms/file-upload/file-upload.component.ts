@@ -53,13 +53,13 @@ export class FileUploadComponent implements OnInit {
 
   // File extensions: default csv/pdf/json/xml (caller may override)
   @Input() set allowedExtensions(value: string[] | null | undefined) {
-    this._allowedExtensions = Array.isArray(value) && value.length > 0 ? value : ['csv', 'pdf', 'json', 'xml'];
+    this._allowedExtensions = Array.isArray(value) && value.length > 0 ? value : ['csv', 'pdf', 'json', 'xml', 'htm', 'html'];
     this.acceptAttr = this._allowedExtensions.map((e) => `.${e.toLowerCase()}`).join(',');
   }
   public get allowedExtensions(): string[] {
     return this._allowedExtensions;
   }
-  private _allowedExtensions: string[] = ['csv', 'pdf', 'json', 'xml'];
+  private _allowedExtensions: string[] = ['csv', 'pdf', 'json', 'xml', 'htm', 'html'];
 
   // Max file size (bytes) - default 25 MB
   @Input() set maxFileSizeBytes(value: number | null | undefined) {
@@ -114,7 +114,7 @@ export class FileUploadComponent implements OnInit {
   public isUploading: boolean = false;
 
   // Bound to <input type="file" [accept]="acceptAttr">
-  public acceptAttr: string = '.csv,.pdf,.json,.xml';
+  public acceptAttr: string = '.csv,.pdf,.json,.xml,.htm,.html';
 
   // -----------------------------------------------------------------
   // DI

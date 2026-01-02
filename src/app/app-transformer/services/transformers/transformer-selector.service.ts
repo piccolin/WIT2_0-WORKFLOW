@@ -1,13 +1,3 @@
-import { Injectable } from '@angular/core';
-import { TsgTransformerService } from './vendors/tsg-transformer.service';
-import { TransformationRequest, Vendors } from '../../models/transform.models';
-import {CubitacPdfExtractorService} from "@app/app-transformer/services/extractors/vendors/cubitac/cubitac-pdf-extractor.service";
-import {CubitacTransformerService} from "@app/app-transformer/services/transformers/vendors/cubitac-transformer.service";
-import {
-  HorningsTransformerService
-} from "@app/app-transformer/services/transformers/vendors/hornings-transformer.service";
-
-
 /**
  * @Filename:    transformer-selector.service.ts
  * @Type:        Service
@@ -16,14 +6,14 @@ import {
  *
  * @Description:
  *   Selects the correct vendors canonicalization pipeline based on the request.vendor.
- *   Only TSG is wired today; other vendors can be added incrementally.
+ *   Vendors can be added incrementally.
  *
  * @Data Sources:
  *   - TransformationRequest.vendor
  *
  * @Services Used:
- *   - TsgTransformerService:
- *     1) Handles TSG canonicalization end-to-end
+ *   - TransformerServices:
+ *     1) Handles vendor specific canonicalization end-to-end
  *
  * @TODOs:
  *   - Add additional vendor transformers (Cubitac, ForeverMark, GHI, US Cabinet, Wolf, Matrix Cabinets, Hornings Supply).
@@ -32,6 +22,17 @@ import {
  * @Notes:
  *   - This selector is intentionally thin: choose a pipeline and delegate.
  */
+
+import { Injectable } from '@angular/core';
+import { TransformationRequest, Vendors } from '../../models/transform.models';
+//TransformerServices
+import { TsgTransformerService } from './vendors/tsg-transformer.service';
+import { CubitacTransformerService} from "@app/app-transformer/services/transformers/vendors/cubitac-transformer.service";
+import { HorningsTransformerService} from "@app/app-transformer/services/transformers/vendors/hornings-transformer.service";
+import { UsCabinetDepotTransformerService} from "@app/app-transformer/services/transformers/vendors/us-cabinet-depot-transformer.service";
+import { WolfTransformerService} from "@app/app-transformer/services/transformers/vendors/wolf-transformer.service";
+
+
 type VendorTransform = {
   transform(request: TransformationRequest): Promise<any>;
 };
@@ -45,7 +46,9 @@ export class TransformerSelectorService {
   constructor(
     private   tsgPipeline: TsgTransformerService,
     private   cubitacPipeline: CubitacTransformerService,
-    private   horningsPipeline: HorningsTransformerService
+    private   horningsPipeline: HorningsTransformerService,
+    private   uscdPipeline: UsCabinetDepotTransformerService,
+    private   wolfPipeline: WolfTransformerService
   ) {}
 
   // -----------------------------------------------------------------
@@ -65,6 +68,12 @@ export class TransformerSelectorService {
 
       case Vendors.HorningsSupply:
         return this.horningsPipeline;
+
+      case Vendors.UsCabinet:
+        return this.uscdPipeline;
+
+      case Vendors.Wolf:
+        return this.wolfPipeline;
 
 
       default:

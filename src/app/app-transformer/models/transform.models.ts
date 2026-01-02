@@ -37,6 +37,7 @@ export enum OrderType {
 
 export enum FileType {
   Csv = 'CSV',
+  Html = 'HTML',
   Pdf = 'PDF',
   Json = 'JSON',
   Xml = 'XML'
