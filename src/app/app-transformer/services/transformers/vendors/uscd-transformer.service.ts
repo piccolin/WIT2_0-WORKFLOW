@@ -41,22 +41,14 @@
  *   - Keep this service orchestration-only. Business logic belongs in stage services.
  */
 import {Injectable} from '@angular/core';
-import {SalesOrderMapResult, TransformationRequest, Vendors} from '../../../models/transform.models';
+import {TransformationRequest} from '../../../models/transform.models';
 import {IntegrationPayloadGraphqlService} from "@app/app-data/services/stores/graphql/integration-payload-graphql.service";
 import {PdfTextModelJsonUtilService} from "@app/app-parse/pdf-parser/utils/pdf-text-model-to-json.util";
-import {TsgPdfExtractorService} from "@app/app-transformer/services/extractors/vendors/tsg/tsg-pdf-extractor.service";
-import {PdfTextBehaviorialModel} from "@app/app-parse/pdf-parser/models/pdf-text-behaviorial.model";
-import {ExtractedOrder} from "@app/app-transformer/services/extractors/models/extract.model";
-import {SalesOrder} from "@scr/API";
 import {TransformerDataService} from "@app/app-transformer/services/data/transformer-data.service";
 import {USCabinetDepotParseService} from "@app/app-transformer/services/parsers/vendors/uscd-parse.service";
 import {UsCabinetDepotNormalizeService} from "@app/app-transformer/services/normalizers/vendors/uscd-normalize.service";
-import {
-  UsCabinetDepotDefaultValueService
-} from "@app/app-transformer/services/defaulters/vendors/uscd-default-value.service";
-import {
-  UsCabinetDepotCalculateService
-} from "@app/app-transformer/services/calculators/vendors/uscd-cabinet-calculate.service";
+import {UsCabinetDepotDefaultValueService} from "@app/app-transformer/services/defaulters/vendors/uscd-default-value.service";
+import {UsCabinetDepotCalculateService} from "@app/app-transformer/services/calculators/vendors/uscd-cabinet-calculate.service";
 import {UsCabinetDepotDecorateService} from "@app/app-transformer/services/decorators/vendors/uscd-decorate.service";
 import {UsCabinetDepotMapToModelService} from "@app/app-transformer/services/mappers/vendors/uscd-map-to-model.service";
 
@@ -67,16 +59,15 @@ export class UsCabinetDepotTransformerService {
   // DI
   // -----------------------------------------------------------------
   constructor(
-    private parseService: USCabinetDepotParseService,
+    private parseService:                     USCabinetDepotParseService,
     private integrationPayloadGraphqlService: IntegrationPayloadGraphqlService,
-    private pdfTextModelJsonUtilService:PdfTextModelJsonUtilService,
-    private tsgPdfExtractorService: TsgPdfExtractorService,
-    private normalizeService: UsCabinetDepotNormalizeService,
-    private defaultValueService: UsCabinetDepotDefaultValueService,
-    private calculateService: UsCabinetDepotCalculateService,
-    private decorateService: UsCabinetDepotDecorateService,
-    private mapToModelService: UsCabinetDepotMapToModelService,
-    private transformerDataService: TransformerDataService
+    private pdfTextModelJsonUtilService:      PdfTextModelJsonUtilService,
+    private normalizeService:                 UsCabinetDepotNormalizeService,
+    private defaultValueService:              UsCabinetDepotDefaultValueService,
+    private calculateService:                 UsCabinetDepotCalculateService,
+    private decorateService:                  UsCabinetDepotDecorateService,
+    private mapToModelService:                UsCabinetDepotMapToModelService,
+    private transformerDataService:           TransformerDataService
   ) {}
 
   // -----------------------------------------------------------------
@@ -89,12 +80,12 @@ export class UsCabinetDepotTransformerService {
   public async transform(request: TransformationRequest): Promise<void> {
 
     // 1) Parse vendor file into a predictable intermediate structure
-    const parsedPdf = await this.parseService.parse(request);
-    console.log("parsedPdf: \n%o", parsedPdf);
+    const htmlPdf = await this.parseService.parse(request);
+    console.log("htmlPdf: \n%o", htmlPdf);
 
     // 2) Extract to temporary model
-    const extractedOrder: ExtractedOrder =  this.tsgPdfExtractorService.extract(parsedPdf as PdfTextBehaviorialModel);
-    console.log("extractedOrder: \n%o", extractedOrder)
+    // const extractedOrder: ExtractedOrder =  this.tsgPdfExtractorService.extract(parsedPdf as PdfTextBehaviorialModel);
+    // console.log("extractedOrder: \n%o", extractedOrder)
 
     // // 3) Store Input Model
     // //this.transformerDataService.createIntegrationPayload()

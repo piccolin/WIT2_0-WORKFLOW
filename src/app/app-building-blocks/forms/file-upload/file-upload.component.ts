@@ -11,7 +11,7 @@ import { SpinnerService } from '@app/app-building-blocks/spinner/services/spinne
  *   Local-only file picker/dropzone that emits the file (and optionally content)
  *   to the parent component. No server calls.
  *
- *   Restricts uploads to: *.csv, *.pdf, *.json, *.xml
+ *   Restricts uploads to: *.csv, *.pdf, *.json, *.xml, *.htm, *.html
  *   Restricts uploads by size via maxFileSizeBytes/maxFileSizeMb inputs
  */
 
