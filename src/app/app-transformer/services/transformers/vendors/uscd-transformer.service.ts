@@ -42,12 +42,6 @@
  */
 import {Injectable} from '@angular/core';
 import {SalesOrderMapResult, TransformationRequest, Vendors} from '../../../models/transform.models';
-import {TsgParseService} from '@app/app-transformer/services/parsers/vendors/tsg-parse.service';
-import {TsgNormalizeService} from '@app/app-transformer/services/normalizers/vendors/tsg-normalize.service';
-import {TsgDefaultValueService} from '@app/app-transformer/services/defaulters/vendors/tsg-default-value.service';
-import {TsgCalculateService} from '@app/app-transformer/services/calculators/vendors/tsg-calculate.service';
-import {TsgDecorateService} from '@app/app-transformer/services/decorators/vendors/tsg-decorate.service';
-import {TsgMapToModelService} from '@app/app-transformer/services/mappers/vendors/tsg-map-to-model.service';
 import {IntegrationPayloadGraphqlService} from "@app/app-data/services/stores/graphql/integration-payload-graphql.service";
 import {PdfTextModelJsonUtilService} from "@app/app-parse/pdf-parser/utils/pdf-text-model-to-json.util";
 import {TsgPdfExtractorService} from "@app/app-transformer/services/extractors/vendors/tsg/tsg-pdf-extractor.service";
@@ -55,6 +49,16 @@ import {PdfTextBehaviorialModel} from "@app/app-parse/pdf-parser/models/pdf-text
 import {ExtractedOrder} from "@app/app-transformer/services/extractors/models/extract.model";
 import {SalesOrder} from "@scr/API";
 import {TransformerDataService} from "@app/app-transformer/services/data/transformer-data.service";
+import {USCabinetDepotParseService} from "@app/app-transformer/services/parsers/vendors/uscd-parse.service";
+import {UsCabinetDepotNormalizeService} from "@app/app-transformer/services/normalizers/vendors/uscd-normalize.service";
+import {
+  UsCabinetDepotDefaultValueService
+} from "@app/app-transformer/services/defaulters/vendors/uscd-default-value.service";
+import {
+  UsCabinetDepotCalculateService
+} from "@app/app-transformer/services/calculators/vendors/uscd-cabinet-calculate.service";
+import {UsCabinetDepotDecorateService} from "@app/app-transformer/services/decorators/vendors/uscd-decorate.service";
+import {UsCabinetDepotMapToModelService} from "@app/app-transformer/services/mappers/vendors/uscd-map-to-model.service";
 
 @Injectable({ providedIn: 'root' })
 export class UsCabinetDepotTransformerService {
@@ -63,15 +67,15 @@ export class UsCabinetDepotTransformerService {
   // DI
   // -----------------------------------------------------------------
   constructor(
-    private parseService: TsgParseService,
+    private parseService: USCabinetDepotParseService,
     private integrationPayloadGraphqlService: IntegrationPayloadGraphqlService,
     private pdfTextModelJsonUtilService:PdfTextModelJsonUtilService,
     private tsgPdfExtractorService: TsgPdfExtractorService,
-    private normalizeService: TsgNormalizeService,
-    private defaultValueService: TsgDefaultValueService,
-    private calculateService: TsgCalculateService,
-    private decorateService: TsgDecorateService,
-    private mapToModelService: TsgMapToModelService,
+    private normalizeService: UsCabinetDepotNormalizeService,
+    private defaultValueService: UsCabinetDepotDefaultValueService,
+    private calculateService: UsCabinetDepotCalculateService,
+    private decorateService: UsCabinetDepotDecorateService,
+    private mapToModelService: UsCabinetDepotMapToModelService,
     private transformerDataService: TransformerDataService
   ) {}
 

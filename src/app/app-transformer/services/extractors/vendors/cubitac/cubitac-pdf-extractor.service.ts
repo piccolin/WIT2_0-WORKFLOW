@@ -138,6 +138,22 @@ export class CubitacPdfExtractorService {
     const tblStartLabels = this.uniqueAnchors(pdf.all('QTY'));
     if (tblStartLabels.length === 0) throw err.because('Could not find Line Items Table header');
 
+    // const table = new PdfTable({
+    //   geometry: {
+    //     lineTolerance: 2,
+    //     joinTolerance: 6,
+    //   },
+    //   parse: {
+    //     minFilledCells: 2,
+    //     blankLineLimit: 10,
+    //     // Cubitac PDFs often end the table with a "Style Total" row/section.
+    //     stopPredicate: (_row: PdfTableRow, rawLineText: string) => /style\s+total/i.test(rawLineText ?? ''),
+    //   },
+    //   // Keep columns predictable, but DO NOT normalize values.
+    //   columnNamer: (raw: string) => (raw ?? '').replace(/\s+/g, ' ').trim().toUpperCase(),
+    // });
+
+    // PdfTable tells the parser how to stitch text into columns and rows.
     const table = new PdfTable({
       geometry: {
         lineTolerance: 2,
@@ -146,12 +162,40 @@ export class CubitacPdfExtractorService {
       parse: {
         minFilledCells: 2,
         blankLineLimit: 10,
-        // Cubitac PDFs often end the table with a "Style Total" row/section.
-        stopPredicate: (_row: PdfTableRow, rawLineText: string) => /style\s+total/i.test(rawLineText ?? ''),
+
+        // Hornings PDFs have totals/footer text below the table.
+        // Stop parsing as soon as we hit those footer lines so they don't become "items".
+        stopPredicate: (_row: any, rawLineText: string) => {
+          const t = (rawLineText ?? '').toString().replace(/\s+/g, ' ').trim().toLowerCase();
+          return (
+            t.startsWith('net order') ||
+            t.startsWith('less discount') ||
+            t.startsWith('sales tax') ||
+            t.startsWith('order total') ||
+            t.startsWith('entered by') ||
+            // This line shows up in your PDF footer and was being pulled into table rows:
+            // "$309 Freight ---- ..." (exact wording varies, so keep it broad)
+            /^\$\s*\d+/.test(t) && t.includes('freight')
+          );
+        },
       },
-      // Keep columns predictable, but DO NOT normalize values.
-      columnNamer: (raw: string) => (raw ?? '').replace(/\s+/g, ' ').trim().toUpperCase(),
+
+      // Different PDFs may label the same column in slightly different ways.
+      // This maps variations into consistent column names.
+      columnNamer: (col: string) => {
+        switch ((col ?? '').replace(/\s+/g, ' ').trim()) {
+          case 'Item Description':
+            return 'Description';
+          case 'Unit $':
+            return 'Each';
+          case 'Back Order':
+            return 'BO';
+          default:
+            return col;
+        }
+      },
     });
+
 
     for (const anchor of tblStartLabels) {
       pdf.getTable(anchor, table);

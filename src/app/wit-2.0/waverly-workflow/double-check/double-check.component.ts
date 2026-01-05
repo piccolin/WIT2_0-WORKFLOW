@@ -20,7 +20,7 @@ export class DoubleCheckComponent {
   // -----------------------------------------------------------------
   // UI Config
   // -----------------------------------------------------------------
-  public allowedExtensions: string[] = ['csv', 'pdf', 'json', 'xml'];
+  public allowedExtensions: string[] = ['csv', 'pdf', 'json', 'xml', 'html', 'htm'];
   public maxSizeMb: number = 5;
 
   // -----------------------------------------------------------------

@@ -25,7 +25,7 @@ import {HtmlFileParserService} from "@app/app-parse/html-parser/services/html-fi
 import {HtmlParseError} from "@app/app-parse/html-parser/errors/html-parse-error";
 
 @Injectable({ providedIn: 'root' })
-export class USCabinetDepotService extends ParserBaseService {
+export class USCabinetDepotParseService extends ParserBaseService {
 
   constructor(private readonly HtmlParser: HtmlFileParserService) {
     super();
