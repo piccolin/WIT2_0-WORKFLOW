@@ -55,6 +55,8 @@ import {PdfTextBehaviorialModel} from "@app/app-parse/pdf-parser/models/pdf-text
 import {ExtractedOrder} from "@app/app-transformer/services/extractors/models/extract.model";
 import {SalesOrder} from "@scr/API";
 import {TransformerDataService} from "@app/app-transformer/services/data/transformer-data.service";
+import {HtmlFileParserService} from "@app/app-parse/html-parser/services/html-file-parser.service";
+import {USCabinetDepotParseService} from "@app/app-transformer/services/parsers/vendors/us-cabinet-depot-parse.service";
 
 @Injectable({ providedIn: 'root' })
 export class WolfTransformerService {
@@ -63,15 +65,8 @@ export class WolfTransformerService {
   // DI
   // -----------------------------------------------------------------
   constructor(
-    private parseService: TsgParseService,
+    private htmlParserService: USCabinetDepotParseService,
     private integrationPayloadGraphqlService: IntegrationPayloadGraphqlService,
-    private pdfTextModelJsonUtilService:PdfTextModelJsonUtilService,
-    private tsgPdfExtractorService: TsgPdfExtractorService,
-    private normalizeService: TsgNormalizeService,
-    private defaultValueService: TsgDefaultValueService,
-    private calculateService: TsgCalculateService,
-    private decorateService: TsgDecorateService,
-    private mapToModelService: TsgMapToModelService,
     private transformerDataService: TransformerDataService
   ) {}
 
@@ -85,12 +80,12 @@ export class WolfTransformerService {
   public async transform(request: TransformationRequest): Promise<void> {
 
     // 1) Parse vendor file into a predictable intermediate structure
-    const parsedPdf = await this.parseService.parse(request);
-    console.log("parsedPdf: \n%o", parsedPdf);
+    const parsedHtml = await this.htmlParserService.parse(request);
+    console.log("parsedHtml: \n%o", parsedHtml);
 
-    // 2) Extract to temporary model
-    const extractedOrder: ExtractedOrder =  this.tsgPdfExtractorService.extract(parsedPdf as PdfTextBehaviorialModel);
-    console.log("extractedOrder: \n%o", extractedOrder)
+    //2) Extract to temporary model
+    // const extractedOrder: ExtractedOrder =  this.tsgPdfExtractorService.extract(parsedPdf as PdfTextBehaviorialModel);
+    // console.log("extractedOrder: \n%o", extractedOrder)
 
     // // 3) Store Input Model
     // //this.transformerDataService.createIntegrationPayload()
