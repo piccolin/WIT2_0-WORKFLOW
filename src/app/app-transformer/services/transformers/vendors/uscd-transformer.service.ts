@@ -51,6 +51,8 @@ import {UsCabinetDepotDefaultValueService} from "@app/app-transformer/services/d
 import {UsCabinetDepotCalculateService} from "@app/app-transformer/services/calculators/vendors/uscd-cabinet-calculate.service";
 import {UsCabinetDepotDecorateService} from "@app/app-transformer/services/decorators/vendors/uscd-decorate.service";
 import {UsCabinetDepotMapToModelService} from "@app/app-transformer/services/mappers/vendors/uscd-map-to-model.service";
+import {UscdHtmlExtractorService} from "@app/app-transformer/services/extractors/vendors/uscd/uscd-html-extractor.service";
+import {ExtractedOrder} from "@app/app-transformer/services/extractors/models/extract.model";
 
 @Injectable({ providedIn: 'root' })
 export class UsCabinetDepotTransformerService {
@@ -60,6 +62,7 @@ export class UsCabinetDepotTransformerService {
   // -----------------------------------------------------------------
   constructor(
     private parseService:                     USCabinetDepotParseService,
+    private uscdHtmlExtractorService:         UscdHtmlExtractorService,
     private integrationPayloadGraphqlService: IntegrationPayloadGraphqlService,
     private pdfTextModelJsonUtilService:      PdfTextModelJsonUtilService,
     private normalizeService:                 UsCabinetDepotNormalizeService,
@@ -80,12 +83,12 @@ export class UsCabinetDepotTransformerService {
   public async transform(request: TransformationRequest): Promise<void> {
 
     // 1) Parse vendor file into a predictable intermediate structure
-    const htmlPdf = await this.parseService.parse(request);
-    console.log("htmlPdf: \n%o", htmlPdf);
+    const htmlDoc = await this.parseService.parse(request);
+    console.log("htmlDoc: \n%o", htmlDoc);
 
     // 2) Extract to temporary model
-    // const extractedOrder: ExtractedOrder =  this.tsgPdfExtractorService.extract(parsedPdf as PdfTextBehaviorialModel);
-    // console.log("extractedOrder: \n%o", extractedOrder)
+    const extractedOrder: ExtractedOrder =  this.uscdHtmlExtractorService.extractFromDoc(<DocumentFragment>htmlDoc);
+    console.log("extractedOrder: \n%o", extractedOrder)
 
     // // 3) Store Input Model
     // //this.transformerDataService.createIntegrationPayload()

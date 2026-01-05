@@ -29,8 +29,8 @@ import { TransformationRequest, Vendors } from '../../models/transform.models';
 import { TsgTransformerService } from './vendors/tsg-transformer.service';
 import { CubitacTransformerService} from "@app/app-transformer/services/transformers/vendors/cubitac-transformer.service";
 import { HorningsTransformerService} from "@app/app-transformer/services/transformers/vendors/hornings-transformer.service";
-import { UscdTransformerService} from "@app/app-transformer/services/transformers/vendors/uscd-transformer.service";
 import { WolfTransformerService} from "@app/app-transformer/services/transformers/vendors/wolf-transformer.service";
+import {UsCabinetDepotTransformerService} from "@app/app-transformer/services/transformers/vendors/uscd-transformer.service";
 
 
 type VendorTransform = {
@@ -47,7 +47,7 @@ export class TransformerSelectorService {
     private   tsgPipeline: TsgTransformerService,
     private   cubitacPipeline: CubitacTransformerService,
     private   horningsPipeline: HorningsTransformerService,
-    private   uscdPipeline: UscdTransformerService,
+    private   uscdPipeline: UsCabinetDepotTransformerService,
     private   wolfPipeline: WolfTransformerService
   ) {}
 

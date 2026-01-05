@@ -56,7 +56,6 @@ import {ExtractedOrder} from "@app/app-transformer/services/extractors/models/ex
 import {SalesOrder} from "@scr/API";
 import {TransformerDataService} from "@app/app-transformer/services/data/transformer-data.service";
 import {HtmlFileParserService} from "@app/app-parse/html-parser/services/html-file-parser.service";
-import {USCabinetDepotParseService} from "@app/app-transformer/services/parsers/vendors/us-cabinet-depot-parse.service";
 
 @Injectable({ providedIn: 'root' })
 export class WolfTransformerService {
@@ -65,7 +64,7 @@ export class WolfTransformerService {
   // DI
   // -----------------------------------------------------------------
   constructor(
-    private htmlParserService: USCabinetDepotParseService,
+    //private htmlParserService: USCabinetDepotParseService,
     private integrationPayloadGraphqlService: IntegrationPayloadGraphqlService,
     private transformerDataService: TransformerDataService
   ) {}
@@ -80,8 +79,8 @@ export class WolfTransformerService {
   public async transform(request: TransformationRequest): Promise<void> {
 
     // 1) Parse vendor file into a predictable intermediate structure
-    const parsedHtml = await this.htmlParserService.parse(request);
-    console.log("parsedHtml: \n%o", parsedHtml);
+    //const parsedHtml = await this.htmlParserService.parse(request);
+    //console.log("parsedHtml: \n%o", parsedHtml);
 
     //2) Extract to temporary model
     // const extractedOrder: ExtractedOrder =  this.tsgPdfExtractorService.extract(parsedPdf as PdfTextBehaviorialModel);

@@ -42,7 +42,7 @@ export class USCabinetDepotParseService extends ParserBaseService {
     const file = this.getFileFromRequest(request);
 
     // Turn the PDF into a searchable model (text + coordinates).
-   return await this.HtmlParser.parse(file);
+   return await this.HtmlParser.parseToDoc(file);
   }
 
   // -----------------------------------------------------------------
