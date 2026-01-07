@@ -23,6 +23,9 @@
  *
  *   Why so strict?
  *   If Cubitac changes their layout, we WANT this to fail loudly so we notice quickly.
+ *
+ *   TO-DO
+ *   -Shipping Address extraction has to be corrected
  */
 
 import { Injectable } from '@angular/core';
@@ -47,14 +50,59 @@ export class CubitacPdfExtractorService {
   public extract(pdf: PdfTextBehaviorialModel): ExtractedOrder {
     const err = new ExtractorError('cubitac');
 
-    // ---------------------------------------------------------------
-    // Shipping Address
-    // ---------------------------------------------------------------
-    const stLabel = pdf.first('Ship To');
-    if (!stLabel) throw err.because('Could not find Ship To Label');
+    // // ---------------------------------------------------------------
+    // // Shipping Address
+    // // ---------------------------------------------------------------
+    // const stLabel = pdf.first('Ship To');
+    // if (!stLabel) throw err.because('Could not find Ship To Label');
+    //
+    // const shippingAddress = pdf.getBelow(stLabel, 3, 45);
+    // if (shippingAddress.length !== 3) throw err.because('Could not find Ship To Address');
 
-    const shippingAddress = pdf.getBelow(stLabel, 3, 45);
-    if (shippingAddress.length !== 3) throw err.because('Could not find Ship To Address');
+    // ---------------------------------------------------------------
+    // Shipping Address (Cubitac)
+    //   - Address is under "SHIP TO"
+    //   - There is a blank line after the label
+    //   - Right column text can spill into the same row (e.g., PROJECTED DELIVERY DATE)
+    // ---------------------------------------------------------------
+    const stLabel = pdf.first("SHIP TO", "Ship To");
+    if (!stLabel) throw err.because("Could not find Ship To Label");
+
+    // Pull a few lines so we can skip blank + junk safely
+    const below = pdf.getBelow(stLabel, 10, 80).map(v => (v ?? "").trim());
+
+    // Helper: remove right-column spillover from a line
+    const stripRightColumnJunk = (line: string) => {
+      // Add more stop-words if you see them bleeding into the Ship To line
+      const STOP_WORDS = ["PROJECTED DELIVERY DATE", "DELIVERY DATE"];
+      let out = line;
+
+      for (const stop of STOP_WORDS) {
+        const idx = out.toUpperCase().indexOf(stop);
+        if (idx >= 0) out = out.slice(0, idx).trim();
+      }
+      return out;
+    };
+
+// 1) Skip blanks
+// 2) Skip date-only lines like 11/21/2025 (often the projected delivery date value)
+// 3) Strip right-column labels that got appended to the address line
+    const cleaned = below
+      .filter(Boolean)
+      .filter(line => !/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(line))
+      .map(stripRightColumnJunk)
+      .filter(Boolean);
+
+// Take first 2–3 address lines (street + city/state/zip, sometimes name line)
+    const shippingAddress = cleaned.slice(0, 3);
+
+// Validate (your example is 2 lines; some are 3)
+    if (shippingAddress.length < 2) throw err.because("Could not find Ship To Address");
+
+// shippingAddress is now like:
+// ["411 W End Ave Apt 16E", "New York, NY 10024"]
+
+
 
     // ---------------------------------------------------------------
     // Shipping Method

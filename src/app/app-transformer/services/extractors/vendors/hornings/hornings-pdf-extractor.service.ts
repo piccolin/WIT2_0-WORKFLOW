@@ -19,6 +19,9 @@
  *
  *   Why so strict?
  *   If Hornings changes their layout, we WANT this to fail loudly so we notice quickly.
+ *
+ *   To-Do
+ *   -Shipping Method when extracted has to be corrected
  */
 
 import { Injectable } from '@angular/core';
@@ -26,6 +29,8 @@ import { PdfTextBehaviorialModel } from '@app/app-parse/pdf-parser/models/pdf-te
 import { PdfTable } from '@app/app-parse/pdf-parser/models/pdf-table-behaviorial.model';
 import { ExtractorError } from '@app/app-transformer/services/extractors/vendors/hornings/hornings-extractor.error';
 import { ExtractedOrder, ExtractedOrderItem } from '@app/app-transformer/services/extractors/models/extract.model';
+import { PdfGeometry } from '@app/app-parse/pdf-parser/helpers/pdf-geometry';
+
 
 @Injectable({ providedIn: 'root' })
 export class HorningsPdfExtractorService {
@@ -49,26 +54,56 @@ export class HorningsPdfExtractorService {
     const stLabel = pdf.first('Ship To');
     if (!stLabel) throw err.because('Could not find Ship To Label');
 
-    const shippingAddress = pdf.getBelow(stLabel, 4, 2);
-    if (shippingAddress.length !== 4) throw err.because('Ship To Address incomplete');
+    // const shippingAddress = pdf.getBelow(stLabel, 4, 2);
+    // if (shippingAddress.length !== 4) throw err.because('Ship To Address incomplete');
+
+    const shippingAddressRaw = pdf.getBelow(stLabel, 6, 2);
+    const shippingAddress = (shippingAddressRaw ?? []).map(s => (s ?? '').trim()).filter(Boolean);
+
+// Hornings "Ship To" is sometimes 4 lines, sometimes 5 (phone line can merge).
+    if (shippingAddress.length < 4) throw err.because('Ship To Address incomplete');
+
+// Keep at most the first 5 lines so we don’t drift into the "Sold To" address.
+    const shippingAddressFinal = shippingAddress.slice(0, 5);
+
+
+    // // ---------------------------------------------------------------
+    // // Shipping Method
+    // // ---------------------------------------------------------------
+    // // Find "Ship VIA" and read the value underneath it.
+    //   const shipViaHits = pdf.all('Ship VIA', 'Ship Via') ?? [];
+    //
+    // // STRICT RULE: accept ONLY a label that is exactly "Ship VIA" (not "Ship VIA F.O.B.")
+    //   const shipViaLabel = shipViaHits.find((h: any) => {
+    //   const labelText = String(h?.label ?? h?.text ?? '').toUpperCase();
+    //   return labelText.includes('SHIP VIA') && !labelText.includes('F.O.B');
+    // });
+    //
+    // // In this PDF there is only "Ship VIA F.O.B.", so shipViaLabel will be undefined,
+    // // and shippingMethod should become undefined.
+    // const shippingMethod = shipViaLabel
+    //   ? ((pdf.getBelow(shipViaLabel, 1, 1)[0] ?? '').trim() || undefined)
+    //   : undefined;
+
 
     // ---------------------------------------------------------------
 // Shipping Method
 // ---------------------------------------------------------------
 // Find "Ship VIA" and read the value underneath it.
-    const shipViaHits = pdf.all('Ship VIA', 'Ship Via') ?? [];
+//
+// IMPORTANT:
+// PdfTextSearch can match "Ship VIA" even when the PDF says "Ship VIA F.O.B."
+// (because punctuation is stripped during matching).
+// We must explicitly detect and IGNORE the FOB variant.
+    const shipViaLabel = pdf.first('Ship VIA', 'Ship Via');
 
-// STRICT RULE: accept ONLY a label that is exactly "Ship VIA" (not "Ship VIA F.O.B.")
-    const shipViaLabel = shipViaHits.find((h: any) => {
-      const labelText = String(h?.label ?? h?.text ?? '').toUpperCase();
-      return labelText.includes('SHIP VIA') && !labelText.includes('F.O.B');
-    });
+// If Ship VIA label is missing OR it's actually the "F.O.B." variant,
+// shippingMethod should be undefined for this vendor.
+    const shippingMethod =
+      shipViaLabel && !this.isFobVariantLabel(pdf, shipViaLabel)
+        ? ((pdf.getBelow(shipViaLabel, 1, 1)[0] ?? '').trim() || undefined)
+        : undefined;
 
-// In this PDF there is only "Ship VIA F.O.B.", so shipViaLabel will be undefined,
-// and shippingMethod should become undefined.
-    const shippingMethod = shipViaLabel
-      ? ((pdf.getBelow(shipViaLabel, 1, 1)[0] ?? '').trim() || undefined)
-      : undefined;
 
 
 
@@ -356,6 +391,47 @@ export class HorningsPdfExtractorService {
     return isNegative ? -n : n;
   }
 
+  /**
+   * Detect whether a "Ship VIA" label hit is actually part of "Ship VIA F.O.B."
+   *
+   * Why needed:
+   * PdfTextSearch strips punctuation and matches only the "Ship VIA" portion,
+   * so pdf.first('Ship VIA') will still match a line that says "Ship VIA F.O.B."
+   * We detect this by checking the NEXT token on the same line.
+   */
+  private isFobVariantLabel(pdf: PdfTextBehaviorialModel, anchor: any): boolean {
+    const page = pdf.getPage(anchor?.pageNumber);
+    if (!page) return false;
+
+    const lineTolerance = 2;
+    const lines = PdfGeometry.buildLines(page.items, lineTolerance);
+
+    const anchorItems: any[] = Array.isArray(anchor?.items) ? anchor.items : [];
+    if (!anchorItems.length) return false;
+
+    const firstAnchorItem = anchorItems[0];
+    const lastAnchorItem = anchorItems[anchorItems.length - 1];
+
+    const lineIndex = PdfGeometry.findLineIndexForItem(lines, firstAnchorItem, lineTolerance);
+    if (lineIndex < 0) return false;
+
+    const line = lines[lineIndex];
+    const items = (line?.items ?? [])
+      .slice()
+      .sort((a: any, b: any) => (a?.x ?? 0) - (b?.x ?? 0));
+
+    // Find where the label ends on this line (use the last token of the matched label)
+    const lastIdx = items.findIndex((it: any) => it === lastAnchorItem);
+    if (lastIdx < 0) return false;
+
+    // Check the next token on the same line
+    const next = items[lastIdx + 1];
+    const nextKey = (String(next?.text ?? '') || '')
+      .toUpperCase()
+      .replace(/[^A-Z0-9]+/g, '');
+
+    return nextKey === 'FOB';
+  }
 
 
 }
