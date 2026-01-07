@@ -32,15 +32,6 @@ export class UscdHtmlExtractorService {
   // -----------------------------------------------------------------
 
   /**
-   * Main entry point.
-   * Provide an HTML file and get back the extracted order model.
-   */
-  public async extract(file?: File | null): Promise<ExtractedOrder> {
-    const doc = await this.htmlParser.parseToDoc(file);
-    return this.extractFromDoc(doc);
-  }
-
-  /**
    * Extract from a prepared DocumentFragment.
    * Useful for unit tests (no file I/O required).
    */

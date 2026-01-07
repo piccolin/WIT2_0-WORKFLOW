@@ -31,6 +31,7 @@ import { CubitacTransformerService} from "@app/app-transformer/services/transfor
 import { HorningsTransformerService} from "@app/app-transformer/services/transformers/vendors/hornings-transformer.service";
 import { WolfTransformerService} from "@app/app-transformer/services/transformers/vendors/wolf-transformer.service";
 import {UsCabinetDepotTransformerService} from "@app/app-transformer/services/transformers/vendors/uscd-transformer.service";
+import {ProKitchenTransformerService} from "@app/app-transformer/services/transformers/vendors/prokitchen-transformer.service";
 
 
 type VendorTransform = {
@@ -48,7 +49,8 @@ export class TransformerSelectorService {
     private   cubitacPipeline: CubitacTransformerService,
     private   horningsPipeline: HorningsTransformerService,
     private   uscdPipeline: UsCabinetDepotTransformerService,
-    private   wolfPipeline: WolfTransformerService
+    private   wolfPipeline: WolfTransformerService,
+    private   proKitchenPipeline: ProKitchenTransformerService
   ) {}
 
   // -----------------------------------------------------------------
@@ -74,6 +76,9 @@ export class TransformerSelectorService {
 
       case Vendors.Wolf:
         return this.wolfPipeline;
+
+      case Vendors.ProKitchen:
+        return this.proKitchenPipeline;
 
 
       default:

@@ -28,8 +28,8 @@ export class DoubleCheckComponent {
   // -----------------------------------------------------------------
   async onUploadCompleted(fileUploadPayloadEvent:FileUploadPayloadEvent){
     let transformationRequest: TransformationRequest = {
-      fileType:   FileType.Html,
-      vendor:     Vendors.Wolf,
+      fileType:   FileType.Xml,
+      vendor:     Vendors.ProKitchen,
       orderType:  OrderType.Confirmation,
       file:       fileUploadPayloadEvent.file,
       rawText:    undefined
