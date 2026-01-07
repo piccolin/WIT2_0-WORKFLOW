@@ -1,11 +1,11 @@
 /**
- * @Filename:    uscd-transformer.service.ts
+ * @Filename:    wolf-transformer.service.ts
  * @Type:        Service
  * @Date:        2025-12-17
  * @Author:      Guido A. Piccolino Jr.
  *
  * @Description:
- *   USCD-specific canonicalization pipeline.
+ *   WOLF-specific canonicalization pipeline.
  *   Orchestrates the end-to-end flow:
  *     1) Parse vendor file content into a standard intermediate shape
  *     2) Normalize values/fields into consistent formats
@@ -19,17 +19,17 @@
  *   - TransformationRequest (vendor + order type + contextual info)
  *
  * @Services Used:
- *   - TsgParseService:
- *     1) Converts USCD file into a predictable intermediate structure
- *   - UscdNormalizeService:
+ *   - WolfParseService:
+ *     1) Converts Wolf file into a predictable intermediate structure
+ *   - WolfNormalizeService:
  *     1) Cleans and normalizes parsed values
- *   - UscdDefaultValueService:
+ *   - WolfDefaultValueService:
  *     1) Adds required defaults when values are missing
- *   - UscdCalculateService:
+ *   - WolfCalculateService:
  *     1) Computes derived/calculated fields
- *   - UscdDecorateService:
+ *   - WolfDecorateService:
  *     1) Adds optional enrichment / metadata
- *   - UscdMapToModelService:
+ *   - WolfMapToModelService:
  *     1) Maps the processed data to our canonical schema shape
  *
  * @TODOs:
@@ -41,21 +41,20 @@
  *   - Keep this service orchestration-only. Business logic belongs in stage services.
  */
 import {Injectable} from '@angular/core';
-import {SalesOrderMapResult, TransformationRequest, Vendors} from '../../../models/transform.models';
-import {TsgParseService} from '@app/app-transformer/services/parsers/vendors/tsg-parse.service';
-import {TsgNormalizeService} from '@app/app-transformer/services/normalizers/vendors/tsg-normalize.service';
-import {TsgDefaultValueService} from '@app/app-transformer/services/defaulters/vendors/tsg-default-value.service';
-import {TsgCalculateService} from '@app/app-transformer/services/calculators/vendors/tsg-calculate.service';
-import {TsgDecorateService} from '@app/app-transformer/services/decorators/vendors/tsg-decorate.service';
-import {TsgMapToModelService} from '@app/app-transformer/services/mappers/vendors/tsg-map-to-model.service';
+import {TransformationRequest} from '../../../models/transform.models';
 import {IntegrationPayloadGraphqlService} from "@app/app-data/services/stores/graphql/integration-payload-graphql.service";
 import {PdfTextModelJsonUtilService} from "@app/app-parse/pdf-parser/utils/pdf-text-model-to-json.util";
-import {TsgPdfExtractorService} from "@app/app-transformer/services/extractors/vendors/tsg/tsg-pdf-extractor.service";
-import {PdfTextBehaviorialModel} from "@app/app-parse/pdf-parser/models/pdf-text-behaviorial.model";
-import {ExtractedOrder} from "@app/app-transformer/services/extractors/models/extract.model";
-import {SalesOrder} from "@scr/API";
 import {TransformerDataService} from "@app/app-transformer/services/data/transformer-data.service";
-import {HtmlFileParserService} from "@app/app-parse/html-parser/services/html-file-parser.service";
+import {ExtractedOrder} from "@app/app-transformer/services/extractors/models/extract.model";
+import {WolfParseService} from "@app/app-transformer/services/parsers/vendors/wolf-parse.service";
+import {WolfNormalizeService} from "@app/app-transformer/services/normalizers/vendors/wolf-normalize.service";
+import {WolfDefaultValueService} from "@app/app-transformer/services/defaulters/vendors/wolf-default-value.service";
+import {WolfCalculateService} from "@app/app-transformer/services/calculators/vendors/wolf-calculate.service";
+import {WolfDecorateService} from "@app/app-transformer/services/decorators/vendors/wolf-decorate.service";
+import {WolfMapToModelService} from "@app/app-transformer/services/mappers/vendors/wolf-map-to-model.service";
+import {
+  WolfHtmlExtractorService
+} from "@app/app-transformer/services/extractors/vendors/wolf/wolf-html-extractor.service";
 
 @Injectable({ providedIn: 'root' })
 export class WolfTransformerService {
@@ -64,9 +63,16 @@ export class WolfTransformerService {
   // DI
   // -----------------------------------------------------------------
   constructor(
-    //private htmlParserService: USCabinetDepotParseService,
+    private parseService:                     WolfParseService,
+    private wolfHtmlExtractorService:         WolfHtmlExtractorService,
     private integrationPayloadGraphqlService: IntegrationPayloadGraphqlService,
-    private transformerDataService: TransformerDataService
+    private pdfTextModelJsonUtilService:      PdfTextModelJsonUtilService,
+    private normalizeService:                 WolfNormalizeService,
+    private defaultValueService:              WolfDefaultValueService,
+    private calculateService:                 WolfCalculateService,
+    private decorateService:                  WolfDecorateService,
+    private mapToModelService:                WolfMapToModelService,
+    private transformerDataService:           TransformerDataService
   ) {}
 
   // -----------------------------------------------------------------
@@ -79,12 +85,12 @@ export class WolfTransformerService {
   public async transform(request: TransformationRequest): Promise<void> {
 
     // 1) Parse vendor file into a predictable intermediate structure
-    //const parsedHtml = await this.htmlParserService.parse(request);
-    //console.log("parsedHtml: \n%o", parsedHtml);
+    const htmlDoc = await this.parseService.parse(request);
+    console.log("htmlDoc: \n%o", htmlDoc);
 
-    //2) Extract to temporary model
-    // const extractedOrder: ExtractedOrder =  this.tsgPdfExtractorService.extract(parsedPdf as PdfTextBehaviorialModel);
-    // console.log("extractedOrder: \n%o", extractedOrder)
+    // 2) Extract to temporary model
+    const extractedOrder: ExtractedOrder =  this.wolfHtmlExtractorService.extractFromDoc(<DocumentFragment>htmlDoc);
+    console.log("extractedOrder: \n%o", extractedOrder)
 
     // // 3) Store Input Model
     // //this.transformerDataService.createIntegrationPayload()

@@ -1,2 +1,2 @@
-1) Updated PDF extractors for GHI (Hornings Supply) and Cubitac
+1) End to End transformation fo Wolf Cabinets
 NOTE: Data services need to be introduced for next commit

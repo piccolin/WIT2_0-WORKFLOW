@@ -1,0 +1,2 @@
+1) Updated PDF extractors for GHI (Hornings Supply) and Cubitac
+NOTE: Data services need to be introduced for next commit

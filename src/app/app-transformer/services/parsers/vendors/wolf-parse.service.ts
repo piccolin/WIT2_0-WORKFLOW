@@ -1,10 +1,10 @@
 /**
- * @Filename:    cubitac-parse.service.ts
+ * @Filename:    wolf-parse.service.ts
  * @Type:        Service
  * @Date:        2025-12-17
  *
  * @Description:
- *   Vendor-specific PARSER stage for Cubitac.
+ *   Vendor-specific PARSER stage for US Cabinet Depot.
  *
  *   Layman explanation:
  *   - The user uploads a PDF.
@@ -12,7 +12,7 @@
  *   - Then we apply TSG-specific "find this label, read below/right" rules (TsgPdfExtractor).
  *
  *   Coder’s note:
- *   This service is intentionally thin. All “Cubitac rules” live in CubitacPdfExtractor,
+ *   This service is intentionally thin. All “Wolf rules” live in WolfPdfExtractor,
  *   so they’re easy to unit test and easy to evolve without touching Angular wiring.
  */
 
@@ -21,12 +21,13 @@ import { ParserBaseService } from '../parser-base.service';
 import { TransformationRequest } from '../../../models/transform.models';
 import { PdfParserService } from '@app/app-parse/pdf-parser/services/pdf-parser.service';
 import { PdfParseError } from '@app/app-parse/pdf-parser/errors/pdf-parse-error';
+import {HtmlFileParserService} from "@app/app-parse/html-parser/services/html-file-parser.service";
 import {HtmlParseError} from "@app/app-parse/html-parser/errors/html-parse-error";
 
 @Injectable({ providedIn: 'root' })
 export class WolfParseService extends ParserBaseService {
 
-  constructor(private readonly pdfParser: PdfParserService) {
+  constructor(private readonly HtmlParser: HtmlFileParserService) {
     super();
   }
 
@@ -41,7 +42,7 @@ export class WolfParseService extends ParserBaseService {
     const file = this.getFileFromRequest(request);
 
     // Turn the PDF into a searchable model (text + coordinates).
-    return await this.pdfParser.parse(file);
+    return await this.HtmlParser.parseToDoc(file);
   }
 
   // -----------------------------------------------------------------
@@ -49,7 +50,7 @@ export class WolfParseService extends ParserBaseService {
   // -----------------------------------------------------------------
 
   /**
-   * Try to locate the uploaded PDF File from a request.
+   * Try to locate the uploaded html File from a request.
    *
    * explanation:
    * Different apps store uploads in different request shapes.
@@ -70,7 +71,7 @@ export class WolfParseService extends ParserBaseService {
     if (!(candidate instanceof File)) {
       throw new HtmlParseError(
         'NO_FILE',
-        'Wolf parser expected an uploaded HTML File on the request (e.g., request.file or request.payload.file).'
+        'US Cabinet Depot parser expected an uploaded HTML File on the request (e.g., request.file or request.payload.file).'
       );
     }
 
