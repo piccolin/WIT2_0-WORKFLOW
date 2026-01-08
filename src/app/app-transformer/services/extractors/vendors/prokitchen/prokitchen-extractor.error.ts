@@ -1,5 +1,5 @@
 /**
- * @Filename:    cubitac-extractor.error.ts
+ * @Filename:    prokitchen-extractor.error.ts
  * @Type:        Error
  * @Date:        2025-12-17
  *
