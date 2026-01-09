@@ -27,7 +27,8 @@ export enum Vendors {
   Tsg = 'TSG',
   MatrixCabinets = 'Matrix Cabinets',
   HorningsSupply = 'Hornings Supply',
-  ProKitchen = 'ProKitchen'
+  ProKitchen = 'ProKitchen',
+  WooCommerce = 'WooCommerce'
 }
 
 export enum OrderType {

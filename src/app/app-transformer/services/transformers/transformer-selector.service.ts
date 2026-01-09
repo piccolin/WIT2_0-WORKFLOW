@@ -32,6 +32,9 @@ import { HorningsTransformerService} from "@app/app-transformer/services/transfo
 import { WolfTransformerService} from "@app/app-transformer/services/transformers/vendors/wolf-transformer.service";
 import {UsCabinetDepotTransformerService} from "@app/app-transformer/services/transformers/vendors/uscd-transformer.service";
 import {ProKitchenTransformerService} from "@app/app-transformer/services/transformers/vendors/prokitchen-transformer.service";
+import {
+  WoocommerceTransformerService
+} from "@app/app-transformer/services/transformers/vendors/woocommerce-transformer.service";
 
 
 type VendorTransform = {
@@ -50,7 +53,8 @@ export class TransformerSelectorService {
     private   horningsPipeline: HorningsTransformerService,
     private   uscdPipeline: UsCabinetDepotTransformerService,
     private   wolfPipeline: WolfTransformerService,
-    private   proKitchenPipeline: ProKitchenTransformerService
+    private   proKitchenPipeline: ProKitchenTransformerService,
+    private   WooCommercePipeline: WoocommerceTransformerService
   ) {}
 
   // -----------------------------------------------------------------
@@ -79,6 +83,10 @@ export class TransformerSelectorService {
 
       case Vendors.ProKitchen:
         return this.proKitchenPipeline;
+
+      case Vendors.WooCommerce:
+        return this.WooCommercePipeline;
+
 
 
       default:
