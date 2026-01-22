@@ -3,9 +3,17 @@ import { provideRouter } from '@angular/router';
 import { routes } from './app.routes';
 import {provideHttpClient, withInterceptorsFromDi} from "@angular/common/http";
 
+import {PRESIGN_FUNCTION_URL} from "@app/app.config.token";
+
+
+
 export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
-   provideHttpClient(withInterceptorsFromDi())]
+   provideHttpClient(withInterceptorsFromDi()),
+
+    // Lambda function URL
+    { provide: PRESIGN_FUNCTION_URL, useValue: 'https://cvba3e5zcec2cxdorqsbppisga0rxlbi.lambda-url.us-east-2.on.aws/' }
+  ]
 };

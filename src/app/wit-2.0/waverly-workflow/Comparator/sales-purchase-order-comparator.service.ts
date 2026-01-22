@@ -30,6 +30,7 @@ export class SalesPurchaseOrderItemsComparatorService extends BaseCompareService
     itemB: PurchaseOrder
   ): Array<CompareRuleResult> {
 
+    
     const outcomes: Array<CompareRuleResult> = [];
 
     for (let i = 0; i < SALES_PURCHASE_ORDER_ITEMS_RULE_SETS.length; i++) {
