@@ -1,0 +1,1 @@
+Metadata of the files uploaded in S3 is stored in Dynamo DB.
