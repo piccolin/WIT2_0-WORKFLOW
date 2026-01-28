@@ -50,61 +50,71 @@ export class HorningsPdfExtractorService {
     // ---------------------------------------------------------------
     // Shipping Address
     // ---------------------------------------------------------------
-    // Find the "Ship To" label, then read the lines under it.
-    const stLabel = pdf.first('Ship To');
+
+    const stLabel = pdf.first('Ship To:', 'Ship To');
     if (!stLabel) throw err.because('Could not find Ship To Label');
 
-    // const shippingAddress = pdf.getBelow(stLabel, 4, 2);
-    // if (shippingAddress.length !== 4) throw err.because('Ship To Address incomplete');
+// Read a few extra lines (PDFs can vary), then trim/clean
+    const shippingAddressRaw = pdf.getBelow(stLabel, 10, 45);
+    const shippingLines = (shippingAddressRaw ?? [])
+      .map((s) => (s ?? '').trim())
+      .filter(Boolean);
 
-    const shippingAddressRaw = pdf.getBelow(stLabel, 6, 2);
-    const shippingAddress = (shippingAddressRaw ?? []).map(s => (s ?? '').trim()).filter(Boolean);
+// Stop when we hit the next section of the document.
+// (In Hornings PDFs, these labels appear after the address block.) :contentReference[oaicite:1]{index=1}
+    const STOP_MARKERS = [
+      /^waverly\b/i,             // Sold To block starts (WAVERLY CABINETS, INC.)
+      /^customer\s+p\.?o\.?/i,
+      /^ship\s+via/i,
+      /^f\.?o\.?b\.?/i,
+      /^terms\b/i,
+      /^item\s+description\b/i,
+      /^order\s+number\b/i,
+    ];
 
-// Hornings "Ship To" is sometimes 4 lines, sometimes 5 (phone line can merge).
-    if (shippingAddress.length < 4) throw err.because('Ship To Address incomplete');
+    const cleanedAddress: string[] = [];
+    for (const line of shippingLines) {
+      // If we reached the next section, stop collecting address lines
+      if (STOP_MARKERS.some((rx) => rx.test(line))) break;
 
-// Keep at most the first 5 lines so we don’t drift into the "Sold To" address.
-    const shippingAddressFinal = shippingAddress.slice(0, 5);
+      // Extra safety: never allow FOB lines to be part of shippingAddress
+      const normalized = line.toUpperCase().replace(/[^A-Z0-9]+/g, '');
+      if (normalized === 'FOB' || normalized.startsWith('FOB')) continue;
 
+      cleanedAddress.push(line);
+    }
 
-    // // ---------------------------------------------------------------
-    // // Shipping Method
-    // // ---------------------------------------------------------------
-    // // Find "Ship VIA" and read the value underneath it.
-    //   const shipViaHits = pdf.all('Ship VIA', 'Ship Via') ?? [];
-    //
-    // // STRICT RULE: accept ONLY a label that is exactly "Ship VIA" (not "Ship VIA F.O.B.")
-    //   const shipViaLabel = shipViaHits.find((h: any) => {
-    //   const labelText = String(h?.label ?? h?.text ?? '').toUpperCase();
-    //   return labelText.includes('SHIP VIA') && !labelText.includes('F.O.B');
-    // });
-    //
-    // // In this PDF there is only "Ship VIA F.O.B.", so shipViaLabel will be undefined,
-    // // and shippingMethod should become undefined.
-    // const shippingMethod = shipViaLabel
-    //   ? ((pdf.getBelow(shipViaLabel, 1, 1)[0] ?? '').trim() || undefined)
-    //   : undefined;
+// Hornings "Ship To" is sometimes 4 lines, sometimes 5+ (pickup instructions)
+    if (cleanedAddress.length < 4) throw err.because('Ship To Address incomplete');
+
+// Keep a sane max so we don’t drift (pickup blocks can be longer)
+    const shippingAddressFinal = cleanedAddress.slice(0, 6);
 
 
     // ---------------------------------------------------------------
-// Shipping Method
-// ---------------------------------------------------------------
-// Find "Ship VIA" and read the value underneath it.
-//
-// IMPORTANT:
-// PdfTextSearch can match "Ship VIA" even when the PDF says "Ship VIA F.O.B."
-// (because punctuation is stripped during matching).
-// We must explicitly detect and IGNORE the FOB variant.
-    const shipViaLabel = pdf.first('Ship VIA', 'Ship Via');
+    // Shipping Method (Hornings) - Reliable strategy
+    // ---------------------------------------------------------------
+    // In these PDFs, the "Ship VIA" text is often part of a header line
+    // ("Customer P.O. Comment Ship VIA F.O.B. FPP Terms") and NOT the field label.
+    // The actual method/value is on the next line under that header region.
+    // So we anchor from "Customer P.O." and parse the next line.
+    const customerPoHeader = pdf.first('Customer P.O.', 'Customer P.O');
+    let shippingMethod: string | undefined = undefined;
 
-// If Ship VIA label is missing OR it's actually the "F.O.B." variant,
-// shippingMethod should be undefined for this vendor.
-    const shippingMethod =
-      shipViaLabel && !this.isFobVariantLabel(pdf, shipViaLabel)
-        ? ((pdf.getBelow(shipViaLabel, 1, 1)[0] ?? '').trim() || undefined)
-        : undefined;
+    if (customerPoHeader) {
+      // Read the full line under the "Customer P.O." header area
+      // (this is where we see: COLLINS1230 FC-$499 12.31.25 N NET 30)
+      const lineUnder = this.readFullLineBelowAnchor(pdf, customerPoHeader, 1);
 
+      // If it’s blank or date-only, no method
+      if (lineUnder && !this.isDateLike(lineUnder)) {
+        const picked = this.pickHorningsShipMethod(lineUnder);
+        shippingMethod = picked || undefined;
+      }
+      console.log('Hornings method parse lineUnder(Customer P.O.):', lineUnder);
+      console.log('Hornings method picked:', shippingMethod);
 
+    }
 
 
     // ---------------------------------------------------------------
@@ -252,9 +262,6 @@ export class HorningsPdfExtractorService {
       });
 
 
-
-
-
     // ---------------------------------------------------------------
     // Output
     // ---------------------------------------------------------------
@@ -262,7 +269,7 @@ export class HorningsPdfExtractorService {
     return {
       poNumber: poNumber,
       shippingMethod: shippingMethod,
-      shippingAddress: shippingAddress,
+      shippingAddress: shippingAddressFinal,
 
       freight: freight,
       subtotal: subtotal,
@@ -433,5 +440,85 @@ export class HorningsPdfExtractorService {
     return nextKey === 'FOB';
   }
 
+  private readFullLineBelowAnchor(pdf: PdfTextBehaviorialModel, anchor: any, offsetLines: number): string {
+    const page = pdf.getPage(anchor?.pageNumber);
+    if (!page) return '';
+
+    const lineTolerance = 2;
+    const lines = PdfGeometry.buildLines(page.items, lineTolerance);
+
+    const anchorItems: any[] = Array.isArray(anchor?.items) ? anchor.items : [];
+    if (!anchorItems.length) return '';
+
+    const anchorLineIdx = PdfGeometry.findLineIndexForItem(lines, anchorItems[0], lineTolerance);
+    if (anchorLineIdx < 0) return '';
+
+    const target = lines[anchorLineIdx + offsetLines];
+    if (!target) return '';
+
+    return (target.items ?? [])
+      .slice()
+      .sort((a: any, b: any) => (a?.x ?? 0) - (b?.x ?? 0))
+      .map((it: any) => String(it?.text ?? '').trim())
+      .filter(Boolean)
+      .join(' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  private isDateLike(s: string | undefined | null): boolean {
+    const v = (s ?? '').toString().trim();
+    if (!v) return false;
+
+    return (
+      /^\d{1,2}\.\d{1,2}\.\d{2,4}$/.test(v) ||   // 12.5.25
+      /^\d{1,2}\/\d{1,2}\/\d{2,4}$/.test(v) ||   // 12/5/2025
+      /^\d{4}-\d{2}-\d{2}$/.test(v)              // 2025-12-05
+    );
+  }
+
+  private pickHorningsShipMethod(line: string): string | undefined {
+    const s = (line ?? '').replace(/\s+/g, ' ').trim();
+    if (!s) return undefined;
+
+    // 1) Price-coded method: FC-$499
+    const moneyMethod = s.match(/\b[A-Z]{1,3}-\$\d[\d,]*\b/i);
+    if (moneyMethod?.[0]) return moneyMethod[0];
+
+    // 2) Pickup-style method: "PU MON 12.22"
+    // Grab from "PU" up to the date token
+    const pu = s.match(/\bPU\b.*?\b\d{1,2}\.\d{1,2}\b/i);
+    if (pu?.[0]) return pu[0].trim();
+
+    return undefined;
+  }
+
+  // private readFullLinesBelowAnchor(pdf: PdfTextBehaviorialModel, anchor: any, count: number): string[] {
+  //   const page = pdf.getPage(anchor?.pageNumber);
+  //   if (!page) return [];
+  //
+  //   const lineTolerance = 2;
+  //   const lines = PdfGeometry.buildLines(page.items, lineTolerance);
+  //
+  //   const anchorItems: any[] = Array.isArray(anchor?.items) ? anchor.items : [];
+  //   if (!anchorItems.length) return [];
+  //
+  //   const anchorLineIdx = PdfGeometry.findLineIndexForItem(lines, anchorItems[0], lineTolerance);
+  //   if (anchorLineIdx < 0) return [];
+  //
+  //   return lines
+  //     .slice(anchorLineIdx, anchorLineIdx + 1 + count) // include label line + below lines
+  //     .map((ln: any) =>
+  //       (ln?.items ?? [])
+  //         .slice()
+  //         .sort((a: any, b: any) => (a?.x ?? 0) - (b?.x ?? 0))
+  //         .map((it: any) => String(it?.text ?? '').trim())
+  //         .filter(Boolean)
+  //         .join(' ')
+  //         .replace(/\s+/g, ' ')
+  //         .trim()
+  //     )
+  //     .filter(Boolean);
+  // }
 
 }

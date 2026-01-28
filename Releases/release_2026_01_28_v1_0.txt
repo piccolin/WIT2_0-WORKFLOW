@@ -1,0 +1,2 @@
+1) Updated purchase vs. confirmation orders comparisons for double check.
+2) Updated Cubitac, Hornings Supply and US Cabinet Depot extractors - Beta

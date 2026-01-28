@@ -1,7 +1,7 @@
 /**
  * @Filename:    cubitac-pdf-extractor.service.ts
  * @Type:        Service
- * @Date:        2025-12-30
+ * @Date:        2026-01-28
  *
  * @Description:
  *   Vendor-specific extraction rules for Cubitac PDFs.
@@ -26,9 +26,14 @@
  *
  *   TO-DO
  *   -Shipping Address extraction has to be corrected
-  */
-
-
+ *
+ *   FIX (Item + Description):
+ *   - Some Cubitac PDFs get parsed such that "ITEM" and "DESCRIPTION" are merged
+ *     (e.g., one cell becomes "TCD-15/18 Trimmable Cutlery Divider").
+ *   - This service now detects merged cells and splits them:
+ *       item = first token
+ *       description = rest of line
+ */
 
 import { Injectable } from '@angular/core';
 import { PdfTextBehaviorialModel } from '@app/app-parse/pdf-parser/models/pdf-text-behaviorial.model';
@@ -39,7 +44,6 @@ import { ExtractedOrder, ExtractedOrderItem } from '@app/app-transformer/service
 
 @Injectable({ providedIn: 'root' })
 export class CubitacPdfExtractorService {
-
   // -----------------------------------------------------------------
   // Public API
   // -----------------------------------------------------------------
@@ -52,31 +56,22 @@ export class CubitacPdfExtractorService {
   public extract(pdf: PdfTextBehaviorialModel): ExtractedOrder {
     const err = new ExtractorError('cubitac');
 
-    // // ---------------------------------------------------------------
-    // // Shipping Address
-    // // ---------------------------------------------------------------
-    // const stLabel = pdf.first('Ship To');
-    // if (!stLabel) throw err.because('Could not find Ship To Label');
-    //
-    // const shippingAddress = pdf.getBelow(stLabel, 3, 45);
-    // if (shippingAddress.length !== 3) throw err.because('Could not find Ship To Address');
-
     // ---------------------------------------------------------------
     // Shipping Address (Cubitac)
     //   - Address is under "SHIP TO"
     //   - There is a blank line after the label
     //   - Right column text can spill into the same row (e.g., PROJECTED DELIVERY DATE)
     // ---------------------------------------------------------------
-    const stLabel = pdf.first("SHIP TO", "Ship To");
-    if (!stLabel) throw err.because("Could not find Ship To Label");
+    const stLabel = pdf.first('SHIP TO', 'Ship To');
+    if (!stLabel) throw err.because('Could not find Ship To Label');
 
     // Pull a few lines so we can skip blank + junk safely
-    const below = pdf.getBelow(stLabel, 10, 80).map(v => (v ?? "").trim());
+    const below = pdf.getBelow(stLabel, 10, 80).map(v => (v ?? '').trim());
 
     // Helper: remove right-column spillover from a line
     const stripRightColumnJunk = (line: string) => {
       // Add more stop-words if you see them bleeding into the Ship To line
-      const STOP_WORDS = ["PROJECTED DELIVERY DATE", "DELIVERY DATE"];
+      const STOP_WORDS = ['PROJECTED DELIVERY DATE', 'DELIVERY DATE'];
       let out = line;
 
       for (const stop of STOP_WORDS) {
@@ -86,25 +81,20 @@ export class CubitacPdfExtractorService {
       return out;
     };
 
-// 1) Skip blanks
-// 2) Skip date-only lines like 11/21/2025 (often the projected delivery date value)
-// 3) Strip right-column labels that got appended to the address line
+    // 1) Skip blanks
+    // 2) Skip date-only lines like 11/21/2025 (often the projected delivery date value)
+    // 3) Strip right-column labels that got appended to the address line
     const cleaned = below
       .filter(Boolean)
       .filter(line => !/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(line))
       .map(stripRightColumnJunk)
       .filter(Boolean);
 
-// Take first 2–3 address lines (street + city/state/zip, sometimes name line)
+    // Take first 2–3 address lines (street + city/state/zip, sometimes name line)
     const shippingAddress = cleaned.slice(0, 3);
 
-// Validate (your example is 2 lines; some are 3)
-    if (shippingAddress.length < 2) throw err.because("Could not find Ship To Address");
-
-// shippingAddress is now like:
-// ["411 W End Ave Apt 16E", "New York, NY 10024"]
-
-
+    // Validate (your example is 2 lines; some are 3)
+    if (shippingAddress.length < 2) throw err.because('Could not find Ship To Address');
 
     // ---------------------------------------------------------------
     // Shipping Method
@@ -188,21 +178,6 @@ export class CubitacPdfExtractorService {
     const tblStartLabels = this.uniqueAnchors(pdf.all('QTY'));
     if (tblStartLabels.length === 0) throw err.because('Could not find Line Items Table header');
 
-    // const table = new PdfTable({
-    //   geometry: {
-    //     lineTolerance: 2,
-    //     joinTolerance: 6,
-    //   },
-    //   parse: {
-    //     minFilledCells: 2,
-    //     blankLineLimit: 10,
-    //     // Cubitac PDFs often end the table with a "Style Total" row/section.
-    //     stopPredicate: (_row: PdfTableRow, rawLineText: string) => /style\s+total/i.test(rawLineText ?? ''),
-    //   },
-    //   // Keep columns predictable, but DO NOT normalize values.
-    //   columnNamer: (raw: string) => (raw ?? '').replace(/\s+/g, ' ').trim().toUpperCase(),
-    // });
-
     // PdfTable tells the parser how to stitch text into columns and rows.
     const table = new PdfTable({
       geometry: {
@@ -213,19 +188,39 @@ export class CubitacPdfExtractorService {
         minFilledCells: 2,
         blankLineLimit: 10,
 
-        // Hornings PDFs have totals/footer text below the table.
-        // Stop parsing as soon as we hit those footer lines so they don't become "items".
+        // Stop parsing as soon as we hit footer/totals lines so they don't become "items".
         stopPredicate: (_row: any, rawLineText: string) => {
           const t = (rawLineText ?? '').toString().replace(/\s+/g, ' ').trim().toLowerCase();
+
+          // Cubitac footer starts around here in your PDF:
+          // "Grand Total Signature", "Quote Expires", "*This delivery date..."
+          if (
+            t.includes('grand total') ||
+            t.includes('signature') ||
+            t.includes('please sign') ||
+            t.includes('by signing') ||
+            t.includes('quote expires') ||
+            t.startsWith('*this delivery date') ||
+            t.startsWith('sub') ||          // "SubTotal"
+            t.startsWith('subtotal') ||
+            t.startsWith('discount') ||
+            t.startsWith('shipping')
+          ) {
+            return true;
+          }
+
+
+          //existing footer rules
           return (
             t.startsWith('net order') ||
             t.startsWith('less discount') ||
             t.startsWith('sales tax') ||
             t.startsWith('order total') ||
             t.startsWith('entered by') ||
-            // This line shows up in your PDF footer and was being pulled into table rows:
-            // "$309 Freight ---- ..." (exact wording varies, so keep it broad)
-            /^\$\s*\d+/.test(t) && t.includes('freight')
+            // "$309 Freight ---- ..." (varies, keep it broad)
+            (/^\$\s*\d+/.test(t) && t.includes('freight')) ||
+            // Cubitac can end with "Style Total"
+            t.includes('style total')
           );
         },
       },
@@ -233,19 +228,31 @@ export class CubitacPdfExtractorService {
       // Different PDFs may label the same column in slightly different ways.
       // This maps variations into consistent column names.
       columnNamer: (col: string) => {
-        switch ((col ?? '').replace(/\s+/g, ' ').trim()) {
-          case 'Item Description':
-            return 'Description';
-          case 'Unit $':
-            return 'Each';
-          case 'Back Order':
+        const c = (col ?? '').replace(/\s+/g, ' ').trim().toUpperCase();
+
+        // ✅ IMPORTANT FIX:
+        // Sometimes header comes through as "ITEM DESCRIPTION" (merged)
+        // Preserve it so we can split item/description later.
+        if (c === 'ITEM DESCRIPTION' || c === 'ITEM  DESCRIPTION') return 'ITEM_DESCRIPTION';
+
+        switch (c) {
+          case 'ITEM DESCRIPTION': // extra safety
+            return 'ITEM_DESCRIPTION';
+          case 'DESCRIPTION':
+            return 'DESCRIPTION';
+          case 'UNIT $':
+            return 'EACH';
+          case 'PRICE':
+            return 'PRICE';
+          case 'AMOUNT':
+            return 'AMOUNT';
+          case 'BACK ORDER':
             return 'BO';
           default:
-            return col;
+            return c;
         }
       },
     });
-
 
     for (const anchor of tblStartLabels) {
       pdf.getTable(anchor, table);
@@ -255,8 +262,6 @@ export class CubitacPdfExtractorService {
 
     const items: ExtractedOrderItem[] = rawRows
       .map((row: Record<string, string>) => {
-        const item = this.clean(this.cell(row, ['ITEM'])) || '';
-
         // -----------------------------------------------------------
         // Qty Fix
         // -----------------------------------------------------------
@@ -268,11 +273,21 @@ export class CubitacPdfExtractorService {
         const qtyRaw = this.clean(this.cell(row, ['QTY'])) || undefined;
         const qty = this.extractQtySkippingIndex(qtyRaw) || undefined;
 
-        const description = this.clean(this.cell(row, ['DESCRIPTION'])) || '';
+        // -----------------------------------------------------------
+        //  Item + Description Fix
+        // -----------------------------------------------------------
+        const itemCell = this.clean(this.cell(row, ['ITEM'])) || '';
+        const descCell = this.clean(this.cell(row, ['DESCRIPTION', 'DESC'])) || '';
+
+        // If the parser merged columns, this will often be populated
+        const combinedCell =
+          this.clean(this.cell(row, ['ITEM_DESCRIPTION', 'ITEM DESCRIPTION', 'ITEMDESC', 'ITEMDESC.'])) || '';
+
+        const { item, description } = this.resolveItemAndDescription(itemCell, descCell, combinedCell);
 
         // EXTRACT ONLY (no currency normalization)
-        const each = this.clean(this.cell(row, ['PRICE'])) || undefined;
-        const lineTotal = this.clean(this.cell(row, ['AMOUNT'])) || undefined;
+        const each = this.clean(this.cell(row, ['PRICE', 'EACH', 'UNIT PRICE', 'UNIT $'])) || undefined;
+        const lineTotal = this.clean(this.cell(row, ['AMOUNT', 'TOTAL', 'EXTENDED'])) || undefined;
 
         const hinge = this.clean(this.cell(row, ['HINGE'])) || undefined;
         const finish = this.clean(this.cell(row, ['FINISH'])) || undefined;
@@ -289,18 +304,34 @@ export class CubitacPdfExtractorService {
           finish,
         } as any as ExtractedOrderItem;
       })
+      // .filter((it: any) => {
+      //   const hasItem = !!(it?.item ?? '').toString().trim();
+      //   const hasQty = !!(it?.qty ?? '').toString().trim();
+      //   return hasItem && hasQty;
+      // });
+
       .filter((it: any) => {
-        const hasItem = !!(it?.item ?? '').toString().trim();
-        const hasQty = !!(it?.qty ?? '').toString().trim();
-        return hasItem && hasQty;
+        const item = (it?.item ?? '').toString().trim();
+        const qty = (it?.qty ?? '').toString().trim();
+        const each = (it?.each ?? '').toString().trim();
+        const total = (it?.total ?? '').toString().trim();
+
+        //  Qty must be a number (real line items)
+        const qtyIsNumeric = /^\d+(\.\d+)?$/.test(qty);
+
+        // Must have money values (Cubitac items always have PRICE + AMOUNT)
+        const hasMoney = !!each && !!total;
+
+        //  Exclude date-as-item rows (like 12/25/2025)
+        const itemLooksLikeDate = /^\d{1,2}\/\d{1,2}\/\d{4}$/.test(item);
+
+        return !!item && qtyIsNumeric && hasMoney && !itemLooksLikeDate;
       });
+
 
     // ---------------------------------------------------------------
     // Output (EXTRACTED RAW STRINGS)
     // ---------------------------------------------------------------
-    // NOTE:
-    // If ExtractedOrder does not yet contain discount/style/color fields,
-    // keep the cast and add them to the model when ready.
     return {
       poNumber: poNumber,
       shippingMethod: shippingMethod,
@@ -319,52 +350,73 @@ export class CubitacPdfExtractorService {
   }
 
   // -----------------------------------------------------------------
-  // Anchor / Line helpers
+  // ✅ Item/Description helpers
   // -----------------------------------------------------------------
 
   /**
-   * Sometimes the value we need is on the SAME line as the label.
-   * This reads that line and grabs the next token(s) after the label.
+   * Cubitac sometimes yields:
+   *   ITEM = "TUK Touch Up Kit" and DESCRIPTION empty
+   * OR a merged column like:
+   *   ITEM_DESCRIPTION = "TUK Touch Up Kit"
+   *
+   * This makes sure we always return item + description separately.
    */
-  private extractValueForLabelSameLine(
-    pdf: PdfTextBehaviorialModel,
-    anchor: any,
-    isLabelToken: (text: string) => boolean,
-    tokenCount = 1
-  ): string {
-    const page = pdf.getPage(anchor?.pageNumber);
-    if (!page) return '';
+  private resolveItemAndDescription(
+    itemCell: string,
+    descCell: string,
+    combinedCell: string
+  ): { item: string; description: string } {
+    const item = (itemCell ?? '').trim();
+    const description = (descCell ?? '').trim();
+    const combined = (combinedCell ?? '').trim();
 
-    const lineTolerance = 2;
-    const lines = PdfGeometry.buildLines(page.items, lineTolerance);
+    // Case 1: perfect parse already
+    if (item && description) return { item, description };
 
-    const anchorItem = anchor?.items?.[0];
-    if (!anchorItem) return '';
-
-    const anchorLineIndex = PdfGeometry.findLineIndexForItem(lines, anchorItem, lineTolerance);
-    if (anchorLineIndex < 0) return '';
-
-    const line = lines[anchorLineIndex];
-    const items = (line?.items ?? [])
-      .slice()
-      .sort((a: any, b: any) => (a?.x ?? 0) - (b?.x ?? 0));
-
-    const labelIndex = items.findIndex((it: any) => isLabelToken(String(it?.text ?? '').trim()));
-    if (labelIndex < 0) return '';
-
-    const start = labelIndex + 1;
-
-    const tokens: string[] = [];
-    for (let i = start; i < items.length; i++) {
-      const t = String(items[i]?.text ?? '').trim();
-      if (!t) continue;
-
-      tokens.push(t);
-      if (tokens.length >= Math.max(1, tokenCount)) break;
+    // Case 2: ITEM has everything (common failure mode)
+    if (item && !description) {
+      return this.splitItemAndDescription(item);
     }
 
-    return tokens.join(' ').replace(/\s+/g, ' ').trim();
+    // Case 3: merged column exists
+    if (!item && !description && combined) {
+      return this.splitItemAndDescription(combined);
+    }
+
+    // Case 4: ITEM empty but DESCRIPTION has something (rare)
+    if (!item && description) {
+      const split = this.splitItemAndDescription(description);
+      return split.item ? split : { item: '', description };
+    }
+
+    return { item: item || '', description: description || '' };
   }
+
+  /**
+   * Split "TCD-15/18 Trimmable Cutlery Divider" into:
+   *   item = "TCD-15/18"
+   *   description = "Trimmable Cutlery Divider"
+   *
+   * NOTE:
+   * This assumes Cubitac's item code is the FIRST token.
+   * If you ever see item codes with spaces, we can enhance this.
+   */
+  private splitItemAndDescription(text: string): { item: string; description: string } {
+    const s = (text ?? '').toString().replace(/\s+/g, ' ').trim();
+    if (!s) return { item: '', description: '' };
+
+    const firstSpace = s.indexOf(' ');
+    if (firstSpace < 0) return { item: s, description: '' };
+
+    const item = s.slice(0, firstSpace).trim();
+    const description = s.slice(firstSpace + 1).trim();
+
+    return { item, description };
+  }
+
+  // -----------------------------------------------------------------
+  // Anchor / Line helpers
+  // -----------------------------------------------------------------
 
   /**
    * Sometimes search finds the "same" header more than once.
@@ -477,8 +529,8 @@ export class CubitacPdfExtractorService {
     const leftCenter = leftNeighbor ? this.centerX(leftNeighbor) : null;
     const rightCenter = rightNeighbor ? this.centerX(rightNeighbor) : null;
 
-    const xMin = leftCenter !== null ? ((leftCenter + headerCenter) / 2) : (headerCenter - 160);
-    const xMax = rightCenter !== null ? ((headerCenter + rightCenter) / 2) : (headerCenter + 160);
+    const xMin = leftCenter !== null ? (leftCenter + headerCenter) / 2 : headerCenter - 160;
+    const xMax = rightCenter !== null ? (headerCenter + rightCenter) / 2 : headerCenter + 160;
 
     const tokens = valueLine.items
       .slice()
@@ -512,7 +564,6 @@ export class CubitacPdfExtractorService {
     }
 
     // If it starts with an integer and ends with an integer, keep the last integer.
-    // (Some PDFs may include extra spacing or fragments.)
     const numericParts = parts.filter(p => /^\d+$/.test(p));
     if (numericParts.length >= 2) {
       return numericParts[numericParts.length - 1];
@@ -536,6 +587,6 @@ export class CubitacPdfExtractorService {
   private itemCenterX(it: any): number {
     const x = Number(it?.x ?? 0);
     const w = Number(it?.width ?? 0);
-    return x + (w / 2);
+    return x + w / 2;
   }
 }

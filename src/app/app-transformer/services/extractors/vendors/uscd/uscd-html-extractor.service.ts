@@ -105,10 +105,18 @@ export class UscdHtmlExtractorService {
     if (!shippingAddress.length) throw err.because('Could not parse Shipping Address');
 
     // ---------------------------------------------------------------
+    // PO Number (Job Name/PO#)
+    // ---------------------------------------------------------------
+    const poInput = doc.querySelector('input[name="amastyPaymentMethodAttributes[po]"]') as HTMLInputElement | null;
+    const poNumber = (poInput?.getAttribute('value') ?? poInput?.value ?? '').trim() || undefined;
+
+
+    // ---------------------------------------------------------------
     // Output (raw strings, no normalization)
     // ---------------------------------------------------------------
 
     return {
+      poNumber,
       shippingAddress,
       shippingMethod,
 

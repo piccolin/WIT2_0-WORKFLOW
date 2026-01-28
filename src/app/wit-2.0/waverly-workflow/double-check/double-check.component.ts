@@ -62,8 +62,8 @@ export class DoubleCheckComponent {
 
     // 3) Continue your existing transform as-is
     let transformationRequest: TransformationRequest = {
-      fileType:   FileType.Pdf,
-      vendor:     Vendors.Cubitac,
+      fileType:   FileType.Html,
+      vendor:     Vendors.UsCabinet,
       orderType:  OrderType.Confirmation,
       file:       fileUploadPayloadEvent.file,
       rawText:    undefined
