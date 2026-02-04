@@ -1,0 +1,330 @@
+:host {
+  display: block;
+  width: 100%;
+  height: 100%;
+  font-size: 2rem;
+}
+
+.dash-shell {
+  width: 100%;
+  height: 100%;
+}
+
+/* -----------------------------------------------------------------
+  Fix: Content should reflow when the sidenav width changes (collapsed)
+  - Angular Material sets margins inline; we override with !important
+------------------------------------------------------------------ */
+.dash-shell .mat-drawer-content {
+  margin-left: 260px !important;
+}
+
+.dash-shell.is-collapsed .mat-drawer-content {
+  margin-left: 76px !important;
+}
+
+.dash-shell.is-handset .mat-drawer-content {
+  margin-left: 0 !important;
+}
+
+.dash-sidenav mat-icon,
+.dash-toolbar mat-icon {
+  width: 24px;
+  height: 24px;
+  line-height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transform: translateY(-1px);
+}
+
+/*--------------
+// Left sidenav: width + collapse behavior
+//-------------*/
+.dash-sidenav {
+  width: 260px;
+  background: #FFFFFF;
+  overflow-x: hidden;
+}
+.dash-sidenav.is-collapsed {
+  width: 76px;
+}
+
+/*--------------
+// Sidenav header: brand + collapse control
+//-------------*/
+.dash-sidenav-header {
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 0.75rem;
+  border-bottom: 1px solid #DDDDDD;
+}
+
+.dash-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.dash-brand.is-collapsed {
+  justify-content: center;
+  width: 100%;
+}
+
+.dash-brand-icon {
+  color: #00AEEF;
+}
+
+.dash-brand-text {
+  color: #000000;
+  font-weight: 700;
+}
+
+.dash-collapse-btn {
+  color: #B3B3B3;
+}
+
+/*--------------
+// Nav list + active state + collapsed centering
+//-------------*/
+.dash-nav-list {
+  padding-top: 0.5rem;
+}
+
+.dash-nav-item {
+  height: 48px;
+  border-radius: 0.5rem;
+  margin: 0.25rem 0.5rem;
+}
+.dash-nav-item.is-active {
+  background: #555555;
+}
+
+.dash-nav-icon {
+  margin-right: 0.75rem;
+  color: #B3B3B3;
+}
+
+.dash-sidenav.is-collapsed .dash-nav-icon {
+  margin-right: 0;
+}
+.dash-sidenav.is-collapsed .dash-nav-item {
+  justify-content: center;
+  text-align: center;
+}
+
+.dash-nav-label {
+  color: #000000;
+}
+
+/*--------------
+// Right content: toolbar + page area
+//-------------*/
+.dash-content {
+  width: 100%;
+  height: 100%;
+}
+
+.dash-toolbar {
+  height: 64px;
+}
+
+.dash-toolbar-title-wrap {
+  display: inline-flex;
+  align-items: center;
+}
+
+.dash-title-icon {
+  margin-right: 0.5rem;
+}
+
+.dash-toolbar-title {
+  font-weight: 700;
+}
+
+.dash-toolbar-spacer {
+  flex: 1;
+}
+
+/*--------------
+// Dashboard page background should be white
+//-------------*/
+.dash-page {
+  width: 100%;
+  min-height: calc(100% - 64px);
+  padding: 1.5rem;
+  background: #FFFFFF;
+  overflow-x: hidden;
+}
+
+.dash-page-inner {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* -----------------------------------------------------------------
+  Dashboard - Professional Card System
+------------------------------------------------------------------ */
+/*--------------
+// Grid (auto-fit prevents horizontal overflow)
+//-------------*/
+.dash-grid {
+  display: grid;
+  gap: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.dash-grid--2 {
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+}
+
+.dash-grid--4 {
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.dash-grid--3 {
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+}
+
+/*--------------
+// Card base
+//-------------*/
+.dash-card {
+  border-radius: 1.25rem;
+  padding: 1.25rem;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: #FFFFFF;
+  min-width: 0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 8px 20px rgba(0, 0, 0, 0.06);
+}
+
+.dash-card.mat-mdc-card {
+  padding: 1.25rem;
+}
+
+/*--------------
+// Stat card header
+//-------------*/
+.dash-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.dash-card-title {
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: rgba(0, 0, 0, 0.56);
+  text-transform: uppercase;
+  font-size: 1.15rem;
+}
+
+.dash-card-icon {
+  color: rgba(0, 0, 0, 0.56);
+}
+
+/*--------------
+// Stat values
+//-------------*/
+.dash-card-value {
+  font-size: 2.6rem;
+  font-weight: 900;
+  color: rgba(0, 0, 0, 0.86);
+  line-height: 1.05;
+}
+
+.dash-card-subtle {
+  margin-top: 0.65rem;
+  padding-top: 0.65rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  color: rgba(0, 0, 0, 0.56);
+  font-size: 1.25rem;
+}
+
+/*--------------
+// Freight mini cards
+//-------------*/
+.dash-card--mini {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 94px;
+}
+
+.dash-mini-title {
+  font-weight: 900;
+  color: rgba(0, 0, 0, 0.86);
+  font-size: 1.6rem;
+}
+
+.dash-mini-subtle {
+  color: rgba(0, 0, 0, 0.56);
+  font-weight: 700;
+  font-size: 1.2rem;
+}
+
+/*--------------
+// Section heading
+//-------------*/
+.dash-section-title {
+  margin: 0.25rem 0 1rem 0;
+  font-weight: 900;
+  color: rgba(0, 0, 0, 0.86);
+  font-size: 1.6rem;
+}
+
+/*--------------
+// Order status cards
+//-------------*/
+.dash-status-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.dash-status-title {
+  font-weight: 900;
+  color: rgba(0, 0, 0, 0.86);
+  font-size: 1.6rem;
+}
+
+.dash-status-value {
+  font-size: 2.2rem;
+  font-weight: 900;
+  color: rgba(0, 0, 0, 0.86);
+  line-height: 1.05;
+}
+
+.dash-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  font-size: 1.15rem;
+  font-weight: 900;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+.dash-status-pill .dash-status-icon {
+  transform: translateY(-1px);
+}
+
+.dash-status-pill.is-ok {
+  background: #DCFCE7;
+  color: #16A34A;
+}
+
+.dash-status-pill.is-warn {
+  background: #FEF3C7;
+  color: #F59E0B;
+}
+
+.dash-status-pill.is-stop {
+  background: #FEE2E2;
+  color: #DC2626;
+}
+
+/*# sourceMappingURL=dashboard.component.css.map */

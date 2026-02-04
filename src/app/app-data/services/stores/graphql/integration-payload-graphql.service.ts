@@ -40,20 +40,20 @@ export class IntegrationPayloadGraphqlService extends BaseGraphqlService {
     super();
     console.log('💾 UI On-Load Event: %s initiated via constructor', this.constructor.name);
   }
-
-  // -----------------------------------------------------------------
-  // Queries
-  // -----------------------------------------------------------------
-  public getIntegrationPayload(id: string): Observable<any> {
-    const variables = { id };
-    return this.query(getIntegrationPayload, variables, 'GetIntegrationPayload');
-  }
-
-  public listIntegrationPayloads(limit?: number, filter?: any, nextToken?: string): Observable<any> {
-    const queryLimit = !!limit ? limit : 1000;
-    const variables = { limit: queryLimit, filter, nextToken };
-    return this.query(listIntegrationPayloads, variables, 'ListIntegrationPayloads');
-  }
+  //
+  // // -----------------------------------------------------------------
+  // // Queries
+  // // -----------------------------------------------------------------
+  // public getIntegrationPayload(id: string): Observable<any> {
+  //   const variables = { id };
+  //   return this.query(getIntegrationPayload, variables, 'GetIntegrationPayload');
+  // }
+  //
+  // public listIntegrationPayloads(limit?: number, filter?: any, nextToken?: string): Observable<any> {
+  //   const queryLimit = !!limit ? limit : 1000;
+  //   const variables = { limit: queryLimit, filter, nextToken };
+  //   return this.query(listIntegrationPayloads, variables, 'ListIntegrationPayloads');
+  // }
 
   // -----------------------------------------------------------------
   // Mutations - Creates

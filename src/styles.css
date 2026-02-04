@@ -13,10 +13,19 @@ html, body {
   margin: 0;
   padding: 0;
   font-family: 'Poppins', sans-serif;
-  font-size: 16px;
+  font-size: 10px;
   -webkit-text-size-adjust: 100%;
-  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 50%, #f0fdfa 100%);
+  background: #ffffff;
+  /*background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 50%, #f0fdfa 100%);*/
   overflow-x: hidden;
+}
+
+.mat-icon.mat-ligature-font {
+  font-family: 'Material Icons';
+  font-weight: normal;
+  font-style: normal;
+  letter-spacing: normal;
+  text-transform: none;
 }
 
 #root, app-root, .amplify-auth-container { height: 100%; }

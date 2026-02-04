@@ -4,6 +4,7 @@ import { routes } from './app.routes';
 import {provideHttpClient, withInterceptorsFromDi} from "@angular/common/http";
 
 import {PRESIGN_FUNCTION_URL, SAVE_UPLOAD_RECORD_URL } from "@app/app.config.token";
+import {provideAnimations} from "@angular/platform-browser/animations";
 
 
 
@@ -11,7 +12,8 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
-   provideHttpClient(withInterceptorsFromDi()),
+    provideHttpClient(withInterceptorsFromDi()),
+    provideAnimations(),
 
     // Lambda function URL
     { provide: PRESIGN_FUNCTION_URL, useValue: 'https://cvba3e5zcec2cxdorqsbppisga0rxlbi.lambda-url.us-east-2.on.aws/' },

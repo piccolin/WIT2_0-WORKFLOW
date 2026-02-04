@@ -1,0 +1,258 @@
+<!-- **************************************************************
+     DASHBOARD SHELL
+     - Left side: navigation (collapsible on desktop)
+     - Right side: top toolbar + dashboard content
+*************************************************************** -->
+
+<mat-sidenav-container
+  class="dash-shell"
+  [ngClass]="{
+    'is-collapsed': isCollapsed && !isHandset,
+    'is-handset': isHandset
+  }">
+
+  <!-- *****************  LEFT NAVIGATION  ********************** -->
+  <mat-sidenav
+    #sidenav
+    class="dash-sidenav"
+    [ngClass]="{ 'is-collapsed': isCollapsed }"
+    [mode]="isHandset ? 'over' : 'side'"
+    [opened]="isHandset ? false : true"
+    [disableClose]="!isHandset">
+
+    <!-- Top strip (brand + collapse control) -->
+    <div class="dash-sidenav-header">
+
+      <!-- Brand / logo area -->
+      <div class="dash-brand" [ngClass]="{ 'is-collapsed': isCollapsed }">
+        <mat-icon class="dash-brand-icon">kitchen</mat-icon>
+        <span class="dash-brand-text" *ngIf="!isCollapsed">Slick</span>
+      </div>
+
+      <!-- Collapse toggle (desktop only) -->
+      <button
+        mat-icon-button
+        class="dash-collapse-btn"
+        type="button"
+        aria-label="Toggle side navigation collapse"
+        (click)="toggleCollapse()"
+        *ngIf="!isHandset">
+        <mat-icon>{{ isCollapsed ? 'chevron_right' : 'chevron_left' }}</mat-icon>
+      </button>
+
+    </div>
+
+    <!-- Main nav list -->
+    <mat-nav-list class="dash-nav-list">
+
+      <a
+        mat-list-item
+        class="dash-nav-item"
+        *ngFor="let item of navItems"
+        [routerLink]="item.route"
+        routerLinkActive="is-active"
+        [routerLinkActiveOptions]="{ exact: item.exact ?? false }"
+        (click)="closeSidenavIfHandset()"
+        [matTooltip]="isCollapsed ? item.label : ''"
+        matTooltipPosition="right">
+
+        <!-- Icon -->
+        <mat-icon class="dash-nav-icon">{{ item.icon }}</mat-icon>
+
+        <!-- Label (hidden when collapsed) -->
+        <span class="dash-nav-label" *ngIf="!isCollapsed">{{ item.label }}</span>
+
+      </a>
+
+    </mat-nav-list>
+
+  </mat-sidenav>
+
+  <!-- *****************  RIGHT SIDE (TOOLBAR + CONTENT)  ********************** -->
+  <mat-sidenav-content class="dash-content">
+
+    <!-- *****************  TOP TOOLBAR  ********************** -->
+    <mat-toolbar class="dash-toolbar" color="primary">
+
+      <!-- Mobile open button -->
+      <button
+        mat-icon-button
+        type="button"
+        aria-label="Open navigation menu"
+        (click)="toggleSidenav()"
+        *ngIf="isHandset">
+        <mat-icon>menu</mat-icon>
+      </button>
+
+      <!-- Title (cabinet-related icon + text) -->
+      <span class="dash-toolbar-title-wrap">
+        <mat-icon class="dash-title-icon" aria-hidden="true">kitchen</mat-icon>
+        <span class="dash-toolbar-title">{{ appTitle }}</span>
+      </span>
+
+      <!-- Push actions to right -->
+      <span class="dash-toolbar-spacer"></span>
+
+      <!-- Example actions -->
+      <button mat-icon-button type="button" aria-label="Notifications">
+        <mat-icon>notifications</mat-icon>
+      </button>
+
+      <button mat-icon-button type="button" aria-label="User menu">
+        <mat-icon>account_circle</mat-icon>
+      </button>
+
+    </mat-toolbar>
+
+    <!-- *****************  DASHBOARD CONTENT  ********************** -->
+    <div class="dash-page">
+
+      <div class="dash-page-inner">
+
+        <!-- Summary Cards -->
+        <div class="dash-grid dash-grid--2">
+
+          <mat-card class="dash-card">
+            <div class="dash-card-header">
+              <div class="dash-card-title">Gross Profit</div>
+              <mat-icon class="dash-card-icon">show_chart</mat-icon>
+            </div>
+
+            <div class="dash-card-value">
+              {{ grossProfit | currency:'USD':'symbol':'1.0-0' }}
+            </div>
+
+            <div class="dash-card-subtle">
+              Revenue {{ revenue | currency:'USD':'symbol':'1.0-0' }} •
+              COGS {{ cogs | currency:'USD':'symbol':'1.0-0' }}
+            </div>
+          </mat-card>
+
+          <mat-card class="dash-card">
+            <div class="dash-card-header">
+              <div class="dash-card-title">Gross Profit Margin</div>
+              <mat-icon class="dash-card-icon">percent</mat-icon>
+            </div>
+
+            <div class="dash-card-value">
+              {{ grossProfitMargin | percent:'1.1-1' }}
+            </div>
+
+            <div class="dash-card-subtle">
+              Profit ÷ Revenue
+            </div>
+          </mat-card>
+
+        </div>
+
+        <!-- Freight Cards (placeholders) -->
+        <div class="dash-grid dash-grid--4">
+
+          <mat-card class="dash-card dash-card--mini">
+            <div>
+              <div class="dash-mini-title">Freight</div>
+              <div class="dash-mini-subtle">Placeholder</div>
+            </div>
+            <mat-icon class="dash-card-icon">local_shipping</mat-icon>
+          </mat-card>
+
+          <mat-card class="dash-card dash-card--mini">
+            <div>
+              <div class="dash-mini-title">Freight</div>
+              <div class="dash-mini-subtle">Placeholder</div>
+            </div>
+            <mat-icon class="dash-card-icon">local_shipping</mat-icon>
+          </mat-card>
+
+          <mat-card class="dash-card dash-card--mini">
+            <div>
+              <div class="dash-mini-title">Freight</div>
+              <div class="dash-mini-subtle">Placeholder</div>
+            </div>
+            <mat-icon class="dash-card-icon">local_shipping</mat-icon>
+          </mat-card>
+
+          <mat-card class="dash-card dash-card--mini">
+            <div>
+              <div class="dash-mini-title">Freight</div>
+              <div class="dash-mini-subtle">Placeholder</div>
+            </div>
+            <mat-icon class="dash-card-icon">local_shipping</mat-icon>
+          </mat-card>
+
+        </div>
+
+        <!-- Order Match Status -->
+        <div class="dash-section-title">Order Match Status</div>
+
+        <div class="dash-grid dash-grid--3">
+
+          <mat-card class="dash-card">
+            <div class="dash-status-header">
+              <div class="dash-status-title">Sales Order</div>
+
+              <div class="dash-status-pill" [ngClass]="'is-' + salesOrderStatus">
+                <mat-icon class="dash-status-icon">{{ statusIcon(salesOrderStatus) }}</mat-icon>
+                <span class="dash-status-text">{{ statusLabel(salesOrderStatus) }}</span>
+              </div>
+            </div>
+
+            <div class="dash-status-value">
+              {{ salesOrderTotal | currency:'USD':'symbol':'1.0-0' }}
+            </div>
+
+            <div class="dash-card-subtle">
+              Compared to Purchase + Confirmation
+            </div>
+          </mat-card>
+
+          <mat-card class="dash-card">
+            <div class="dash-status-header">
+              <div class="dash-status-title">Purchase Order</div>
+
+              <div class="dash-status-pill" [ngClass]="'is-' + purchaseOrderStatus">
+                <mat-icon class="dash-status-icon">{{ statusIcon(purchaseOrderStatus) }}</mat-icon>
+                <span class="dash-status-text">{{ statusLabel(purchaseOrderStatus) }}</span>
+              </div>
+            </div>
+
+            <div class="dash-status-value">
+              {{ purchaseOrderTotal | currency:'USD':'symbol':'1.0-0' }}
+            </div>
+
+            <div class="dash-card-subtle">
+              Compared to Sales + Confirmation
+            </div>
+          </mat-card>
+
+          <mat-card class="dash-card">
+            <div class="dash-status-header">
+              <div class="dash-status-title">Confirmation Order</div>
+
+              <div class="dash-status-pill" [ngClass]="'is-' + confirmationOrderStatus">
+                <mat-icon class="dash-status-icon">{{ statusIcon(confirmationOrderStatus) }}</mat-icon>
+                <span class="dash-status-text">{{ statusLabel(confirmationOrderStatus) }}</span>
+              </div>
+            </div>
+
+            <div class="dash-status-value">
+              {{ confirmationOrderTotal | currency:'USD':'symbol':'1.0-0' }}
+            </div>
+
+            <div class="dash-card-subtle">
+              Compared to Sales + Purchase
+            </div>
+          </mat-card>
+
+        </div>
+
+      </div>
+
+      <!-- Keep outlet for future pages -->
+      <router-outlet></router-outlet>
+
+    </div>
+
+  </mat-sidenav-content>
+
+</mat-sidenav-container>

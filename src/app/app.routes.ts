@@ -21,6 +21,13 @@ export const routes: Routes = [
     component: ComparatorTest3Component,
   },
 
+  {
+    path: 'ui',
+    loadComponent: () => import('@wit/dashboard/dashboard.component')
+      .then(component => component.DashboardComponent),
+    title: 'ui',
+  },
+
   //-- Default Paths ---//
   { path: '', redirectTo: '/workflow/double-check', pathMatch: 'full' },
   { path: '**', redirectTo: '/workflow/double-check' },
