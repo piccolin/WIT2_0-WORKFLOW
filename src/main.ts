@@ -11,6 +11,12 @@ import { AppComponent } from './app/app.component';
 import { Amplify } from 'aws-amplify';
 import amplifyOutputs from './amplify_outputs.json'; // From Amplify CLI: npx ampx generate graphql-client-code
 
+//sales vs. purchase vs. confirmation test
+//import '@wit/waverly-workflow/Comparator/sales-purchase-confirmation-order-comparator.test';
+// sales vs. purchase test
+import '@wit/waverly-workflow/Comparator/sales-purchase-order-comparator.test';
+
+
 //console.log('🔧 Amplify Config Loaded:', amplifyOutputs?.auth ? '✅ Auth section found' : '❌ Missing auth config!');  // Debug: Check if auth is there
 Amplify.configure(amplifyOutputs); // Loads API endpoints, auth, credentials (e.g., API_KEY, Cognito)
 

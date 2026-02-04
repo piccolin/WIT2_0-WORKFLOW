@@ -54,27 +54,29 @@ export abstract class BaseCompareService {
     itemA: number | null | undefined,
     itemB: number | null | undefined,
     centsTolerance: number,
-    ruleSet: CompareRuleSet
-  ): CompareRuleResult {
+    ruleSet: CompareRuleSet,
+    itemC: number | null | undefined): CompareRuleResult {
 
-    if (itemA == null || itemB == null) {
-      return this.failRule(ruleSet, ruleSet.missingMessage || ruleSet.failMessage, itemA, itemB);
+    if (itemA == null || itemB == null || ( itemC == null)) {
+      return this.failRule(ruleSet, ruleSet.missingMessage || ruleSet.failMessage, itemA, itemB, itemC);
     }
 
-    const aCents = Math.round(itemA * 100);
+    //const aCents = Math.round(itemA * 100);
+    //Finding difference of b and c which are indeed purchase and confirmation's total amount. We need to make sure these 2 matches, not A (sales)
     const bCents = Math.round(itemB * 100);
-    const diffCents = Math.abs(aCents - bCents);
+    const cCents = Math.round(itemC * 100);
+    const diffCents = Math.abs(bCents - cCents);
 
     if (diffCents <= centsTolerance) {
-      return this.passRule(ruleSet, itemA, itemB);
+      return this.passRule(ruleSet, itemA, itemB, itemC);
     }
 
     const msg = `${ruleSet.failMessage} (delta=$${(diffCents / 100).toFixed(2)})`;
-    return this.failRule(ruleSet, msg, itemA, itemB);
+    return this.failRule(ruleSet, msg, itemA, itemB, itemC);
   }
 
   /**
-   * Fuzzy Address compare (A vs B vs C)
+   * Fuzzy Address compare (A vs. B vs. C)
    *
    * - All three values are REQUIRED
    * - Normalizes addresses into comparable fingerprints

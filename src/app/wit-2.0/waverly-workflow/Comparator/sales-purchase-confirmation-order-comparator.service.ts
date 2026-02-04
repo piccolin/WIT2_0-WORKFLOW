@@ -14,7 +14,7 @@ import {
   SALES_PURCHASE_CONFIRMATION_RULE_SETS
 } from "@wit/waverly-workflow/Comparator/Rules/sales-purchase-confirmation.compare-rule-sets";
 
-// Replace with your generated AppSync types when ready
+// Replace it with your generated AppSync types when ready
 type SalesOrder = any;
 type PurchaseOrder = any;
 type ConfirmationOrder = any;
@@ -67,7 +67,8 @@ export class SalesPurchaseConfirmationComparatorService extends BaseCompareServi
             aVal as (number | null | undefined),
             bVal as (number | null | undefined),
             rule.centsTolerance || 0,
-            rule
+            rule,
+            cVal as (number | null | undefined)
           );
           break;
 

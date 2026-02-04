@@ -41,7 +41,7 @@ export class DoubleCheckComponent {
     // 1) Upload original file to S3 (NEW)
     const s3Ref = await this.s3UploadService.uploadFile(fileUploadPayloadEvent.file);
     this.lastUploadedS3Ref = s3Ref;
-    console.log('✅ Uploaded to S3:', s3Ref);
+    console.log(' Uploaded to S3:', s3Ref);
 
     // 2) Save metadata to DynamoDB
     const record = await this.uploadRecordService.createRecord({
@@ -58,7 +58,7 @@ export class DoubleCheckComponent {
       //orderType: 'Confirmation'
     });
 
-    console.log('✅ Saved upload record (DynamoDB):', record);
+    console.log('Saved upload record (DynamoDB):', record);
 
     // 3) Continue your existing transform as-is
     let transformationRequest: TransformationRequest = {

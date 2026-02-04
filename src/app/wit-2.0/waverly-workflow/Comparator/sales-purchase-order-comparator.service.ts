@@ -18,7 +18,7 @@ import {
   SALES_PURCHASE_ORDER_ITEMS_RULE_SETS
 } from "@wit/waverly-workflow/Comparator/Rules/sales-purchase.compare-rule-sets";
 
-// Replace with your generated AppSync types when ready
+// Replace it  with your generated AppSync types when ready
 type SalesOrder = any;
 type PurchaseOrder = any;
 
@@ -30,7 +30,7 @@ export class SalesPurchaseOrderItemsComparatorService extends BaseCompareService
     itemB: PurchaseOrder
   ): Array<CompareRuleResult> {
 
-    
+
     const outcomes: Array<CompareRuleResult> = [];
 
     for (let i = 0; i < SALES_PURCHASE_ORDER_ITEMS_RULE_SETS.length; i++) {
@@ -59,14 +59,15 @@ export class SalesPurchaseOrderItemsComparatorService extends BaseCompareService
           );
           break;
 
-        case 'MONEY_TOLERANCE_NUMBER':
-          outcome = this.moneyToleranceNumber(
-            aVal as (number | null | undefined),
-            bVal as (number | null | undefined),
-            rule.centsTolerance || 0,
-            rule
-          );
-          break;
+        // case 'MONEY_TOLERANCE_NUMBER':
+        //   outcome = this.moneyToleranceNumber(
+        //     aVal as (number | null | undefined),
+        //     bVal as (number | null | undefined),
+        //     rule.centsTolerance || 0,
+        //     rule,
+        //     cVal as (number | null | undefined)
+        //   );
+        //   break;
 
         default:
           // If a ruleType is not supported, treat it as a BLOCK so it can't silently pass.

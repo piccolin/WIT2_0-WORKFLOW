@@ -43,18 +43,18 @@ export class UscdHtmlExtractorService {
     // ---------------------------------------------------------------
 
     const subtotalEl = doc.querySelector('.data.table.table-totals tr.totals.sub .price');
-    if (!subtotalEl) throw err.because('Could not find Subtotal Element');
+   // if (!subtotalEl) throw err.because('Could not find Subtotal Element');
 
     const shippingMethodEl = doc.querySelector('.data.table.table-totals tr.totals.shipping .mark .value');
-    if (!shippingMethodEl) throw err.because('Could not find Shipping Method Element');
+  //  if (!shippingMethodEl) throw err.because('Could not find Shipping Method Element');
 
     const shippingCostEl = doc.querySelector('.data.table.table-totals tr.totals.shipping .amount .price');
-    if (!shippingCostEl) throw err.because('Could not find Shipping Cost Element');
+   // if (!shippingCostEl) throw err.because('Could not find Shipping Cost Element');
 
     const taxEl = doc.querySelector('.data.table.table-totals tr.totals-tax .amount .price');
 
     const totalEl = doc.querySelector('.data.table.table-totals tr.totals.grand .amount .price');
-    if (!totalEl) throw err.because('Could not find Order Total Element');
+   // if (!totalEl) throw err.because('Could not find Order Total Element');
 
     const subtotal = this.text(subtotalEl);
     const freight = this.text(shippingCostEl);

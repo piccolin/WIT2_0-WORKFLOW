@@ -6,10 +6,31 @@
 
 import { CompareRuleDefinition } from '../Model/comparator.models';
 
-// Replace with your generated AppSync types when ready
+// Replace it with your generated AppSync types when ready
 type SalesOrder = any;
 type ConfirmationOrder = any;
 type PurchaseOrder = any;
+
+// -----------------------------------------------------------------------------
+// Helpers – Order Items Canonicalization
+// -----------------------------------------------------------------------------
+function orderItemsFingerprint(
+  items: Array<{ item: string; qty?: string; description: string }>
+): string {
+  if (!items || items.length === 0) return '';
+
+  return items
+    .map(i => ({
+      item: (i.item ?? '').trim().toUpperCase(),
+      qty: (i.qty ?? '').trim(),
+      desc: (i.description ?? '').trim().toUpperCase().replace(/\s+/g, ' '),
+    }))
+    .sort((a, b) => a.item.localeCompare(b.item)) // order-independent
+    .map(i => `${i.item}|${i.qty}|${i.desc}`)
+    .join('~~');
+}
+
+
 
 export const SALES_PURCHASE_CONFIRMATION_RULE_SETS: Array<CompareRuleDefinition<SalesOrder, PurchaseOrder, ConfirmationOrder>> = [
   // {
@@ -33,9 +54,9 @@ export const SALES_PURCHASE_CONFIRMATION_RULE_SETS: Array<CompareRuleDefinition<
     passMessage: 'Total amount matches within tolerance.',
     failMessage: 'Total amount differs beyond allowed tolerance.',
     missingMessage: 'Total amount is missing on one side and cannot be compared.',
-    itemAValue: (itemA) => itemA?.totalAmount,
-    itemBValue: (itemB) => itemB?.totalAmount,
-    itemCValue: (itemC) => itemC?.totalAmount
+    itemAValue: (itemA) => itemA?.total,
+    itemBValue: (itemB) => itemB?.total,
+    itemCValue: (itemC) => itemC?.total
   },
 
   {
@@ -49,7 +70,22 @@ export const SALES_PURCHASE_CONFIRMATION_RULE_SETS: Array<CompareRuleDefinition<
     itemAValue: (itemA) => itemA?.shippingAddress,
     itemBValue: (itemB) => itemB?.shippingAddress,
     itemCValue: (itemC) => itemC?.shippingAddress
-  }
+  },
 
-  // Add more rules here...
+
+  // {
+  //   ruleId: 'order-items-match',
+  //   field: 'orderItems',
+  //   ruleType: 'EXACT_STRING',
+  //   failDecision: 'BLOCK',
+  //
+  //   passMessage: 'Order items match (item + qty + description).',
+  //   failMessage: 'Order items do not match (item + qty + description).',
+  //   missingMessage: 'Order items missing on one side.',
+  //
+  //   itemAValue: (sales) => orderItemsFingerprint(sales?.orderItems),
+  //   itemBValue: (purchase) => orderItemsFingerprint(purchase?.orderItems),
+  //   itemCValue: (confirmation) => orderItemsFingerprint(confirmation?.orderItems),
+  // }
+
 ];
